@@ -150,9 +150,9 @@
   .history-entry .he-del:hover { opacity:1; }
 
   /* Modal */
-  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.75); z-index:100; justify-content:center; align-items:center; }
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.75); z-index:100; justify-content:center; align-items:center; overflow-y:auto; padding:20px 0; }
   .modal-overlay.active { display:flex; }
-  .modal { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px; width:90%; max-width:400px; text-align:center; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px; width:90%; max-width:400px; text-align:center; margin:auto; max-height:calc(100vh - 40px); overflow-y:auto; }
   .modal .modal-icon { font-size:2.5rem; margin-bottom:8px; }
   .modal h3 { margin-bottom:6px; font-size:1.2rem; }
   .modal p { color:var(--text2); font-size:.9rem; margin-bottom:20px; line-height:1.4; }
@@ -243,7 +243,7 @@
 <div class="lock-screen" id="lockScreen">
   <div style="margin-bottom:8px;"><svg width="56" height="56" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" rx="16" fill="url(#ctxGrad2)"/><text x="32" y="30" text-anchor="middle" font-size="16" font-weight="800" fill="#fff" font-family="system-ui">CTX</text><text x="32" y="46" text-anchor="middle" font-size="8" font-weight="600" fill="rgba(255,255,255,.7)" font-family="system-ui" letter-spacing="2">CAPITAL</text><defs><linearGradient id="ctxGrad2" x1="0" y1="0" x2="64" y2="64"><stop offset="0%" stop-color="#6c5ce7"/><stop offset="100%" stop-color="#00cec9"/></linearGradient></defs></svg></div>
   <h2>CTX Capital</h2>
-  <p data-i18n="lockHint">Tape le code d'accès</p>
+  <p data-i18n="lockHint">Entre le code d'accès</p>
   <div class="lock-error" id="lockError"></div>
   <input type="password" id="lockInput" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off">
 </div>
@@ -280,24 +280,24 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('invest')" data-i18n="tabInvest">💰 Investissements</div>
-    <div class="tab" onclick="switchTab('patrimoine')" data-i18n="tabPatrimoine">🏠 Patrimoine</div>
+    <div class="tab active" onclick="switchTab('invest')" data-i18n="tabInvest">💰 Mes investissements</div>
+    <div class="tab" onclick="switchTab('patrimoine')" data-i18n="tabPatrimoine">🏠 Mon patrimoine</div>
   </div>
 
   <!-- TAB INVESTISSEMENTS -->
   <div class="tab-content active" id="tab-invest">
 
-    <div class="section-title"><span class="icon">💰</span> <span data-i18n="statsTitle">Mon patrimoine</span></div>
+    <div class="section-title"><span class="icon">💰</span> <span data-i18n="statsTitle">Mes investissements</span></div>
     <div class="stats">
-      <div class="stat-card"><div class="emoji">🏦</div><div class="label" data-i18n="statsInvested">Tu as investi</div><div class="value accent" id="totalInvested">0,00 €</div></div>
+      <div class="stat-card"><div class="emoji">🏦</div><div class="label" data-i18n="statsInvested">J'ai investi</div><div class="value accent" id="totalInvested">0,00 €</div></div>
       <div class="stat-card"><div class="emoji">💎</div><div class="label" data-i18n="statsWorth">Ca vaut maintenant</div><div class="value accent2" id="currentValue">0,00 €</div></div>
-      <div class="stat-card"><div class="emoji">🎉</div><div class="label" data-i18n="statsGained">Tu as gagné</div><div class="value green" id="totalGain">+0,00 €</div></div>
+      <div class="stat-card"><div class="emoji">🎉</div><div class="label" data-i18n="statsGained">J'ai gagné</div><div class="value green" id="totalGain">+0,00 €</div></div>
       <div class="stat-card"><div class="emoji">📊</div><div class="label" data-i18n="statsReturn">Rendement</div><div class="value gold" id="totalReturn">0,00%</div></div>
     </div>
     <div class="earnings-row">
-      <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label" data-i18n="earnDay">Tu gagnes par jour</div><div class="value green" id="earningsPerDay">+0,00 €</div><div class="earnings-sub" id="earningsPerDaySub"></div></div>
-      <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label" data-i18n="earnMonth">Tu gagnes par mois</div><div class="value green" id="earningsPerMonth">+0,00 €</div><div class="earnings-sub" id="earningsPerMonthSub"></div></div>
-      <div class="stat-card earnings-card earnings-card-year"><div class="emoji">🏆</div><div class="label" data-i18n="earnYear">Tu gagnes par an</div><div class="value green" id="earningsPerYear">+0,00 €</div><div class="earnings-sub" id="earningsPerYearSub"></div></div>
+      <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label" data-i18n="earnDay">Je gagne par jour</div><div class="value green" id="earningsPerDay">+0,00 €</div><div class="earnings-sub" id="earningsPerDaySub"></div></div>
+      <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label" data-i18n="earnMonth">Je gagne par mois</div><div class="value green" id="earningsPerMonth">+0,00 €</div><div class="earnings-sub" id="earningsPerMonthSub"></div></div>
+      <div class="stat-card earnings-card earnings-card-year"><div class="emoji">🏆</div><div class="label" data-i18n="earnYear">Je gagne par an</div><div class="value green" id="earningsPerYear">+0,00 €</div><div class="earnings-sub" id="earningsPerYearSub"></div></div>
     </div>
 
     <div class="card pending" id="pendingSection" style="display:none;">
@@ -306,7 +306,7 @@
       <div id="pendingContainer"></div>
     </div>
 
-    <button class="invest-cta" onclick="openInvestModal()">🚀 Investir de l'argent</button>
+    <button class="invest-cta" onclick="openInvestModal()">🚀 Investir mon argent</button>
 
 <!-- Invest Modal -->
 <div class="modal-overlay" id="investModal">
@@ -314,19 +314,19 @@
     <button onclick="closeInvestModal()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.4rem;color:var(--text2);cursor:pointer;padding:4px 8px;line-height:1;border-radius:8px;transition:all .2s;" onmouseover="this.style.color='var(--red)';this.style.background='rgba(255,0,0,.08)'" onmouseout="this.style.color='var(--text2)';this.style.background='none'">✕</button>
     <div class="modal-icon">💰</div>
     <h3 data-i18n="investTitle">Investir de l'argent</h3>
-    <p data-i18n="investHint">Tu veux investir ? Choisis la date et le montant, puis valide.</p>
+    <p data-i18n="investHint">Je choisis la date et le montant, puis je valide.</p>
     <input type="hidden" id="type" value="invest">
     <div style="text-align:left;margin-bottom:6px;"><label style="font-size:.82rem;color:var(--text2);" data-i18n="labelDate">📅 Date</label></div>
     <input type="date" id="date" style="margin-bottom:14px;">
-    <div style="text-align:left;margin-bottom:6px;"><label style="font-size:.82rem;color:var(--text2);" data-i18n="labelAmount">💶 Combien tu investis (€)</label></div>
+    <div style="text-align:left;margin-bottom:6px;"><label style="font-size:.82rem;color:var(--text2);" data-i18n="labelAmount">💶 Combien j'investis (€)</label></div>
     <input type="number" id="amount" placeholder="Ex: 50" min="0" step="0.01" style="margin-bottom:18px;">
     <button class="btn btn-primary" onclick="addOperation()" style="width:100%;" data-i18n="btnInvest">🚀 Investir !</button>
   </div>
 </div>
 
     <div class="card">
-      <div class="section-title"><span class="icon">📈</span> <span data-i18n="chartTitle">L'évolution de ton argent</span></div>
-      <p class="form-hint" style="margin-bottom:10px;" data-i18n="chartHint">La courbe en bleu c'est ce que ton argent vaut vraiment. La ligne violette c'est ce que tu as mis au total.</p>
+      <div class="section-title"><span class="icon">📈</span> <span data-i18n="chartTitle">L'évolution de mon argent</span></div>
+      <p class="form-hint" style="margin-bottom:10px;" data-i18n="chartHint">La courbe en bleu c'est ce que mon argent vaut vraiment. La ligne violette c'est ce que j'ai mis au total.</p>
       <div class="chart-wrapper"><canvas id="chart"></canvas></div>
     </div>
 
@@ -335,7 +335,7 @@
     </div>
 
     <div class="card">
-      <div class="section-title"><span class="icon">📋</span> <span data-i18n="tableTitle">Tes investissements</span></div>
+      <div class="section-title"><span class="icon">📋</span> <span data-i18n="tableTitle">Mes investissements</span></div>
       <div id="tableContainer"></div>
     </div>
 
@@ -343,13 +343,13 @@
     <div class="app-header" style="margin-bottom:20px;">
       <div class="logo">🔮</div>
       <h1 style="font-size:1.35rem;" data-i18n="simTitle">Et si j'investissais pendant longtemps ?</h1>
-      <div class="tagline" data-i18n="simTagline">Découvre combien ton argent peut devenir en investissant régulièrement</div>
+      <div class="tagline" data-i18n="simTagline">Découvre combien mon argent peut devenir en investissant régulièrement</div>
     </div>
     <div class="card">
-      <div class="section-title"><span class="icon">🎮</span> <span data-i18n="simParams">Choisis tes paramètres</span></div>
+      <div class="section-title"><span class="icon">🎮</span> <span data-i18n="simParams">Mes paramètres</span></div>
       <div class="form-row">
         <div class="form-group"><label data-i18n="simLabelInit">💰 Investissement de départ (€)</label><input type="number" id="simInit" placeholder="Ex: 1000" min="0" step="1" value="1000"></div>
-        <div class="form-group"><label data-i18n="simLabelMonthly">📅 Chaque mois tu rajoutes (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="300"></div>
+        <div class="form-group"><label data-i18n="simLabelMonthly">📅 Chaque mois je rajoute (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="300"></div>
         <div class="form-group"><label data-i18n="simLabelYears">⏰ Pendant combien d'années</label><input type="number" id="simYears" placeholder="Ex: 10" min="1" max="50" step="1" value="20"></div>
         <div class="form-group">
           <label data-i18n="simLabelRate">📊 Rendement par an (%)</label>
@@ -363,18 +363,18 @@
       </div>
     </div>
     <div class="stats" id="simStats" style="display:none;">
-      <div class="stat-card"><div class="emoji">🏦</div><div class="label" data-i18n="simInvested">Tu auras investi au total</div><div class="value accent" id="simTotalInvested">-</div></div>
+      <div class="stat-card"><div class="emoji">🏦</div><div class="label" data-i18n="simInvested">J'aurai investi au total</div><div class="value accent" id="simTotalInvested">-</div></div>
       <div class="stat-card"><div class="emoji">💎</div><div class="label" data-i18n="simWorth">Ca vaudra</div><div class="value accent2" id="simFinalValue">-</div></div>
       <div class="stat-card"><div class="emoji">🎉</div><div class="label" data-i18n="simInterest">Intérêts gagnés</div><div class="value green" id="simInterest">-</div></div>
       <div class="stat-card"><div class="emoji">📊</div><div class="label" data-i18n="simReturnLabel">Rendement total</div><div class="value gold" id="simReturn">-</div></div>
     </div>
     <div class="earnings-row" id="simEarningsRow" style="display:none;">
-      <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label" data-i18n="simEarnDay">Tu gagneras par jour</div><div class="value green" id="simEarningsPerDay">+0,00 €</div><div class="earnings-sub" id="simEarningsPerDaySub"></div></div>
-      <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label" data-i18n="simEarnMonth">Tu gagneras par mois</div><div class="value green" id="simEarningsPerMonth">+0,00 €</div><div class="earnings-sub" id="simEarningsPerMonthSub"></div></div>
-      <div class="stat-card earnings-card earnings-card-year"><div class="emoji">🏆</div><div class="label" data-i18n="simEarnYear">Tu gagneras par an</div><div class="value green" id="simEarningsPerYear">+0,00 €</div><div class="earnings-sub" id="simEarningsPerYearSub"></div></div>
+      <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label" data-i18n="simEarnDay">Je gagnerai par jour</div><div class="value green" id="simEarningsPerDay">+0,00 €</div><div class="earnings-sub" id="simEarningsPerDaySub"></div></div>
+      <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label" data-i18n="simEarnMonth">Je gagnerai par mois</div><div class="value green" id="simEarningsPerMonth">+0,00 €</div><div class="earnings-sub" id="simEarningsPerMonthSub"></div></div>
+      <div class="stat-card earnings-card earnings-card-year"><div class="emoji">🏆</div><div class="label" data-i18n="simEarnYear">Je gagnerai par an</div><div class="value green" id="simEarningsPerYear">+0,00 €</div><div class="earnings-sub" id="simEarningsPerYearSub"></div></div>
     </div>
     <div class="card" id="simChartCard" style="display:none;">
-      <div class="section-title"><span class="icon">📈</span> <span data-i18n="simChartPre">Ton argent dans</span> <span id="simChartTitle">10</span> <span data-i18n="simChartPost">ans</span></div>
+      <div class="section-title"><span class="icon">📈</span> <span data-i18n="simChartPre">Mon argent dans</span> <span id="simChartTitle">10</span> <span data-i18n="simChartPost">ans</span></div>
       <div class="chart-wrapper"><canvas id="simChart"></canvas></div>
     </div>
   </div>
@@ -385,7 +385,7 @@
     <div class="stats">
       <div class="stat-card big">
         <div class="emoji">👑</div>
-        <div class="label" data-i18n="patriTotal">Ton patrimoine total</div>
+        <div class="label" data-i18n="patriTotal">Mon patrimoine total</div>
         <div class="value accent2" id="patrimoineTotal">0,00 €</div>
         <div style="display:flex; justify-content:center; gap:24px; margin-top:10px; font-size:.78rem; color:var(--text2); flex-wrap:wrap;">
           <span style="white-space:nowrap;">💰 <span data-i18n="patriInvest">Investissements</span> : <strong id="patrimoineInvest" style="color:var(--accent);">0,00 €</strong></span>
@@ -396,7 +396,7 @@
 
     <div class="card">
       <div class="section-title"><span class="icon">➕</span> <span data-i18n="addAssetTitle">Ajouter un bien</span></div>
-      <p class="form-hint" data-i18n="addAssetHint">Ajoute tout ce qui a de la valeur : argent liquide, moto, téléphone, console... Tu peux modifier la valeur quand tu veux.</p>
+      <p class="form-hint" data-i18n="addAssetHint">J'ajoute tout ce qui a de la valeur : argent liquide, moto, téléphone, console... Je peux modifier la valeur quand je veux.</p>
       <div class="form-row">
         <div class="form-group">
           <label data-i18n="labelCat">🏷 Catégorie</label>
@@ -417,18 +417,18 @@
     </div>
 
     <div class="card">
-      <div class="section-title"><span class="icon">📈</span> <span data-i18n="patriChartTitle">L'évolution de ton patrimoine</span></div>
-      <p class="form-hint" style="margin-bottom:10px;" data-i18n="patriChartHint">La courbe montre comment ton patrimoine total (investissements + biens) évolue dans le temps.</p>
+      <div class="section-title"><span class="icon">📈</span> <span data-i18n="patriChartTitle">L'évolution de mon patrimoine</span></div>
+      <p class="form-hint" style="margin-bottom:10px;" data-i18n="patriChartHint">La courbe montre comment mon patrimoine total (investissements + biens) évolue dans le temps.</p>
       <div class="chart-wrapper"><canvas id="patrimoineChart"></canvas></div>
     </div>
 
     <div class="card">
-      <div class="section-title"><span class="icon">🏠</span> <span data-i18n="assetsTitle">Tes biens</span></div>
+      <div class="section-title"><span class="icon">🏠</span> <span data-i18n="assetsTitle">Mes biens</span></div>
       <div id="assetsContainer"></div>
     </div>
   </div>
 
-  <div class="footer" data-i18n="footer">Ton argent grossit de 10% par an grâce aux intérêts composés 🧠</div>
+  <div class="footer" data-i18n="footer">« Les intérêts composés sont la 8ᵉ merveille du monde. Celui qui les comprend les gagne, celui qui ne les comprend pas les paie. » — Albert Einstein 🧠</div>
 </div>
 
 <!-- PIN Modal -->
@@ -454,9 +454,9 @@
   <div class="modal">
     <div class="modal-icon">🔑</div>
     <h3>Bienvenue !</h3>
-    <p>Hugo, choisis un code secret (4 chiffres). Tu en auras besoin pour valider les investissements.</p>
+    <p>Hugo, choisis un code secret (4 chiffres). Il sera nécessaire pour valider les investissements.</p>
     <div class="modal-error" id="setupError"></div>
-    <input type="password" id="setupPin" maxlength="4" placeholder="Ton code" inputmode="numeric" autocomplete="off">
+    <input type="password" id="setupPin" maxlength="4" placeholder="Mon code" inputmode="numeric" autocomplete="off">
     <div style="height:10px;"></div>
     <input type="password" id="setupPinConfirm" maxlength="4" placeholder="Répète le code" inputmode="numeric" autocomplete="off">
     <div style="height:16px;"></div>
@@ -501,7 +501,7 @@
     </div>
     <!-- Step 2: Change codes -->
     <div id="settingsStep2" style="display:none;">
-      <p>Modifie ce que tu veux, laisse vide pour ne pas changer.</p>
+      <p>Je modifie ce que je veux, je laisse vide pour ne pas changer.</p>
       <div class="modal-error" id="settingsError2"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <label style="font-size:.88rem;color:var(--text);">🔐 Code de connexion</label>
@@ -524,48 +524,48 @@
 // --- I18N ---
 let currentLang='fr';
 const T={
-fr:{title:'Mon Portefeuille',tagline:'Regarde ton argent grandir !',lockHint:"Tape le code d'accès",lockError:'Mauvais code !',connecting:'Connexion en cours...',
-tabInvest:'💰 Investissements',tabPatrimoine:'🏠 Patrimoine',
-statsTitle:'Mon patrimoine',statsInvested:'Tu as investi',statsWorth:'Ca vaut maintenant',statsGained:'Tu as gagné',statsReturn:'Rendement',
-earnDay:'Tu gagnes par jour',earnMonth:'Tu gagnes par mois',earnYear:'Tu gagnes par an',
+fr:{title:'Mon Portefeuille',tagline:'Regarde ton argent grandir !',lockHint:"Entre le code d'accès",lockError:'Mauvais code !',connecting:'Connexion en cours...',
+tabInvest:'💰 Mes investissements',tabPatrimoine:'🏠 Mon patrimoine',
+statsTitle:'Mes investissements',statsInvested:"J'ai investi",statsWorth:'Ça vaut maintenant',statsGained:"J'ai gagné",statsReturn:'Rendement',
+earnDay:'Je gagne par jour',earnMonth:'Je gagne par mois',earnYear:'Je gagne par an',
 earnDaySleep:'💪 Même en dormant !',earnDayGrow:'🌱 Ça pousse doucement...',
-earnMonthFire:'🔥 Pas mal du tout !',earnMonthGood:'📈 Ça monte bien !',earnMonthKeep:'🌱 Continue comme ça !',
+earnMonthFire:'🔥 Pas mal du tout !',earnMonthGood:'📈 Ça monte bien !',earnMonthKeep:'🌱 Je continue comme ça !',
 pendingTitle:'En attente de validation',pendingHint:"Hugo doit valider ces opérations avec son code secret avant qu'elles comptent.",
-investTitle:"Investir de l'argent",investHint:'Tu veux investir ? Choisis la date et le montant, puis clique sur le bouton. Hugo devra valider ensuite.',
-labelDate:'📅 Date',labelAmount:'💶 Combien tu investis (€)',btnInvest:'🚀 Investir !',
-chartTitle:"L'évolution de ton argent",chartHint:"La courbe en bleu c'est ce que ton argent vaut vraiment. La ligne violette c'est ce que tu as mis au total.",
-btnClearAll:'🗑 Tout effacer',tableTitle:'Tes investissements',
+investTitle:"Investir mon argent",investHint:'Je choisis la date et le montant, puis je valide. Hugo devra valider ensuite.',
+labelDate:'📅 Date',labelAmount:'💶 Combien j\'investis (€)',btnInvest:'🚀 Investir !',
+chartTitle:"L'évolution de mon argent",chartHint:"La courbe en bleu c'est ce que mon argent vaut vraiment. La ligne violette c'est ce que j'ai mis au total.",
+btnClearAll:'🗑 Tout effacer',tableTitle:'Mes investissements',
 thType:'Type',thDate:'Date',thSince:'Depuis',thAmount:'Montant',
 typeInvest:'📥 Invest',typeRetrait:'📤 Retrait',typeLabelInvest:'Investissement',typeLabelRetrait:'Retrait',
-emptyInvest:'Aucun investissement pour le moment.<br>Ajoute ton premier investissement ci-dessus !',
-simTitle:"Et si j'investissais pendant longtemps ?",simTagline:'Découvre combien ton argent peut devenir en investissant régulièrement',
-simParams:'Choisis tes paramètres',simLabelInit:'💰 Investissement de départ (€)',simLabelMonthly:'📅 Chaque mois tu rajoutes (€)',simLabelYears:"⏰ Pendant combien d'années",simLabelRate:'📊 Rendement par an (%)',btnSimulate:'🚀 Simuler !',
-simInvested:'Tu auras investi au total',simWorth:'Ca vaudra',simInterest:'Intérêts gagnés',simReturnLabel:'Rendement total',
-simEarnDay:'Tu gagneras par jour',simEarnMonth:'Tu gagneras par mois',simEarnYear:'Tu gagneras par an',
-simChartPre:'Ton argent dans',simChartPost:'ans',
+emptyInvest:'Aucun investissement pour le moment.<br>J\'ajoute mon premier investissement ci-dessus !',
+simTitle:"Et si j'investissais pendant longtemps ?",simTagline:'Découvre combien mon argent peut devenir en investissant régulièrement',
+simParams:'Mes paramètres',simLabelInit:'💰 Investissement de départ (€)',simLabelMonthly:'📅 Chaque mois je rajoute (€)',simLabelYears:"⏰ Pendant combien d'années",simLabelRate:'📊 Rendement par an (%)',btnSimulate:'🚀 Simuler !',
+simInvested:"J'aurai investi au total",simWorth:'Ça vaudra',simInterest:'Intérêts gagnés',simReturnLabel:'Rendement total',
+simEarnDay:'Je gagnerai par jour',simEarnMonth:'Je gagnerai par mois',simEarnYear:'Je gagnerai par an',
+simChartPre:'Mon argent dans',simChartPost:'ans',
 simEDMachine:'🤑 Machine à billets !',simEDSleep:'💪 Même en dormant !',simEDGrow:'🌱 Ça pousse doucement...',
-simEMSalary:'🏆 Un vrai salaire passif !',simEMFire:'🔥 Pas mal du tout !',simEMGood:'📈 Ça monte bien !',simEMKeep:'🌱 Continue comme ça !',
-patriTotal:'Ton patrimoine total',patriInvest:'Investissements',patriAssets:'Biens',
-addAssetTitle:'Ajouter un bien',addAssetHint:'Ajoute tout ce qui a de la valeur : argent liquide, moto, téléphone, console... Tu peux modifier la valeur quand tu veux.',
+simEMSalary:'🏆 Un vrai salaire passif !',simEMFire:'🔥 Pas mal du tout !',simEMGood:'📈 Ça monte bien !',simEMKeep:'🌱 Je continue comme ça !',
+patriTotal:'Mon patrimoine total',patriInvest:'Mes investissements',patriAssets:'Mes biens',
+addAssetTitle:'Ajouter un bien',addAssetHint:'J\'ajoute tout ce qui a de la valeur : argent liquide, moto, téléphone, console... Je peux modifier la valeur quand je veux.',
 labelCat:'🏷 Catégorie',catCash:'💵 Argent liquide',catBank:'🏦 Compte bancaire bloqué',catVehicle:'🏍️ Moto / Véhicule',catTech:'📱 Tech (tel, console...)',catClothes:'👟 Vêtements / Sneakers',catHobby:'🎸 Loisirs / Collection',catOther:'💰 Autre',
 labelName:'✏️ Nom',labelValue:'💶 Valeur (€)',btnAdd:'➕ Ajouter',
-patriChartTitle:"L'évolution de ton patrimoine",patriChartHint:'La courbe montre comment ton patrimoine total (investissements + biens) évolue dans le temps.',
-assetsTitle:'Tes biens',emptyAssets:'Aucun bien pour le moment.<br>Ajoute ton premier bien ci-dessus !',
-footer:'Ton argent grossit de 10% par an grâce aux intérêts composés 🧠',
-chartLabelValue:'Valeur actuelle',chartLabelInvested:"Ce que j'ai investi",
+patriChartTitle:"L'évolution de mon patrimoine",patriChartHint:'La courbe montre comment mon patrimoine total (investissements + biens) évolue dans le temps.',
+assetsTitle:'Mes biens',emptyAssets:'Aucun bien pour le moment.<br>J\'ajoute mon premier bien ci-dessus !',
+footer:'« Les intérêts composés sont la 8ᵉ merveille du monde. Celui qui les comprend les gagne, celui qui ne les comprend pas les paie. » — Albert Einstein 🧠',
+chartLabelValue:'Valeur actuelle',chartLabelInvested:"Ce que j\'ai investi",
 chartLabelPatri:'Patrimoine total',chartLabelBiens:'Biens',
 updatedOn:'Mis à jour le',historyLabel:'Historique des valeurs',
 btnCancel:'Annuler',btnSave:'💾 Enregistrer',btnOK:'OK',
 pinSecret:'Code secret',pinHint:'Tape le code secret de Hugo',pinBadCode:'Mauvais code ! Réessaye.',
-setupWelcome:'Bienvenue !',setupHint:'Hugo, choisis un code secret (4 chiffres). Tu en auras besoin pour valider les investissements.',setupBtn:"✅ C'est parti !",setupCode:'Ton code',setupConfirm:'Répète le code',
+setupWelcome:'Bienvenue !',setupHint:'Hugo, choisis un code secret (4 chiffres). Il sera nécessaire pour valider les investissements.',setupBtn:"✅ C'est parti !",setupCode:'Mon code',setupConfirm:'Je répète le code',
 editAssetTitle:'Ajouter / modifier une valeur',editDateLabel:'📅 À quelle date ?',editValueLabel:'💶 Valeur à cette date (€)',
-settingsTitle:'Paramètres',settingsAdminHint:'Entre le code admin',settingsModifyHint:'Modifie ce que tu veux, laisse vide pour ne pas changer.',settingsLockLabel:'🔐 Code de connexion',settingsNewAccess:'Nouveau code (4 chiffres)',settingsNewPin:'🔑 Nouveau code admin (4 chiffres)',settingsEmpty:'Laisser vide',
-alertSent:"👍 C'est envoyé ! Hugo doit maintenant valider.",alertDateAmount:'Mets une date et un montant !',alertMinAmount:'Mets au moins un montant !',alertNameValue:'Mets un nom et une valeur !',alertChooseDate:'Choisis une date !',alertValidValue:'Mets une valeur valide !',alertNoDelete:'Tu ne peux pas supprimer la dernière valeur !',alertClearConfirm:'Tu es sûr ? Tout sera effacé pour toujours !',alertSettingsUpdated:'✅ Paramètres mis à jour !',alertNothingChanged:'Rien à changer !',alertPinDigits:'Le code doit contenir 4 chiffres.',alertPinNoMatch:'Les deux codes ne sont pas identiques !',alertAccessDigits:'Le code connexion doit faire 4 chiffres.',alertAdminDigits:'Le code admin doit faire 4 chiffres.',
-alertWithdrawExceed:'Le retrait dépasse le portefeuille.',
+settingsTitle:'Paramètres',settingsAdminHint:'Entre le code admin',settingsModifyHint:'Je modifie ce que je veux, je laisse vide pour ne pas changer.',settingsLockLabel:'🔐 Code de connexion',settingsNewAccess:'Nouveau code (4 chiffres)',settingsNewPin:'🔑 Nouveau code admin (4 chiffres)',settingsEmpty:'Laisser vide',
+alertSent:"👍 C'est envoyé ! Hugo doit maintenant valider.",alertDateAmount:'Il faut une date et un montant !',alertMinAmount:'Il faut au moins un montant !',alertNameValue:'Il faut un nom et une valeur !',alertChooseDate:'Il faut choisir une date !',alertValidValue:'Il faut une valeur valide !',alertNoDelete:'Je ne peux pas supprimer la dernière valeur !',alertClearConfirm:'Je suis sûr ? Tout sera effacé pour toujours !',alertSettingsUpdated:'✅ Paramètres mis à jour !',alertNothingChanged:'Rien à changer !',alertPinDigits:'Le code doit contenir 4 chiffres.',alertPinNoMatch:'Les deux codes ne sont pas identiques !',alertAccessDigits:'Le code connexion doit faire 4 chiffres.',alertAdminDigits:'Le code admin doit faire 4 chiffres.',
+alertWithdrawExceed:'Le retrait dépasse mon portefeuille.',
 today:"aujourd'hui",yesterday:'hier',daysAgo:'il y a {n} j',monthsAgo:'il y a {n} mois',yearsAgo:'il y a {n}a'
 },
 en:{title:'My Portfolio',tagline:'Watch your money grow!',lockHint:'Enter access code',lockError:'Wrong code!',connecting:'Connecting...',
-tabInvest:'💰 Investments',tabPatrimoine:'🏠 Assets',
+tabInvest:'💰 Investments',tabPatrimoine:'🏠 My assets',
 statsTitle:'How is your portfolio doing',statsInvested:'You invested',statsWorth:'Worth now',statsGained:'You earned',statsReturn:'Return',
 earnDay:'You earn per day',earnMonth:'You earn per month',earnYear:'You earn per year',
 earnDaySleep:'💪 Even while sleeping!',earnDayGrow:'🌱 Growing slowly...',
@@ -605,7 +605,7 @@ alertWithdrawExceed:'Withdrawal exceeds portfolio value.',
 today:'today',yesterday:'yesterday',daysAgo:'{n} days ago',monthsAgo:'{n} months ago',yearsAgo:'{n}y ago'
 },
 ru:{title:'Мой Портфель',tagline:'Смотри, как растут твои деньги!',lockHint:'Введи код доступа',lockError:'Неверный код!',connecting:'Подключение...',
-tabInvest:'💰 Инвестиции',tabPatrimoine:'🏠 Имущество',
+tabInvest:'💰 Инвестиции',tabPatrimoine:'🏠 Моё имущество',
 statsTitle:'Как дела у портфеля',statsInvested:'Ты вложил',statsWorth:'Сейчас стоит',statsGained:'Ты заработал',statsReturn:'Доходность',
 earnDay:'Ты зарабатываешь в день',earnMonth:'Ты зарабатываешь в месяц',earnYear:'Ты зарабатываешь в год',
 earnDaySleep:'💪 Даже во сне!',earnDayGrow:'🌱 Растёт потихоньку...',
@@ -645,7 +645,7 @@ alertWithdrawExceed:'Вывод больше стоимости портфеля
 today:'сегодня',yesterday:'вчера',daysAgo:'{n} дн. назад',monthsAgo:'{n} мес. назад',yearsAgo:'{n}г. назад'
 },
 ar:{title:'محفظتي',tagline:'!شاهد أموالك تنمو',lockHint:'أدخل رمز الدخول',lockError:'!رمز خاطئ',connecting:'...جاري الاتصال',
-tabInvest:'💰 استثمارات',tabPatrimoine:'🏠 الممتلكات',
+tabInvest:'💰 استثمارات',tabPatrimoine:'🏠 ممتلكاتي',
 statsTitle:'كيف حال محفظتك',statsInvested:'استثمرت',statsWorth:'القيمة الحالية',statsGained:'ربحت',statsReturn:'العائد',
 earnDay:'تربح يومياً',earnMonth:'تربح شهرياً',earnYear:'تربح سنوياً',
 earnDaySleep:'!💪 حتى أثناء النوم',earnDayGrow:'...🌱 ينمو ببطء',
@@ -685,7 +685,7 @@ alertWithdrawExceed:'.السحب يتجاوز قيمة المحفظة',
 today:'اليوم',yesterday:'أمس',daysAgo:'منذ {n} يوم',monthsAgo:'منذ {n} شهر',yearsAgo:'منذ {n} سنة'
 },
 ja:{title:'マイポートフォリオ',tagline:'お金が増えるのを見よう！',lockHint:'アクセスコードを入力',lockError:'コードが違います！',connecting:'接続中...',
-tabInvest:'💰 投資',tabPatrimoine:'🏠 資産',
+tabInvest:'💰 投資',tabPatrimoine:'🏠 マイ資産',
 statsTitle:'ポートフォリオの状況',statsInvested:'投資額',statsWorth:'現在の価値',statsGained:'利益',statsReturn:'リターン',
 earnDay:'1日の収益',earnMonth:'1ヶ月の収益',earnYear:'1年の収益',
 earnDaySleep:'💪 寝ている間も！',earnDayGrow:'🌱 少しずつ成長中...',
@@ -725,7 +725,7 @@ alertWithdrawExceed:'引出額がポートフォリオを超えています。',
 today:'今日',yesterday:'昨日',daysAgo:'{n}日前',monthsAgo:'{n}ヶ月前',yearsAgo:'{n}年前'
 },
 th:{title:'พอร์ตการลงทุน',tagline:'ดูเงินของคุณเติบโต!',lockHint:'ใส่รหัสเข้าใช้งาน',lockError:'รหัสผิด!',connecting:'กำลังเชื่อมต่อ...',
-tabInvest:'💰 การลงทุน',tabPatrimoine:'🏠 ทรัพย์สิน',
+tabInvest:'💰 การลงทุน',tabPatrimoine:'🏠 ทรัพย์สินของฉัน',
 statsTitle:'พอร์ตของคุณเป็นอย่างไร',statsInvested:'ลงทุนไป',statsWorth:'มูลค่าปัจจุบัน',statsGained:'กำไร',statsReturn:'ผลตอบแทน',
 earnDay:'รายได้ต่อวัน',earnMonth:'รายได้ต่อเดือน',earnYear:'รายได้ต่อปี',
 earnDaySleep:'💪 แม้ตอนนอนหลับ!',earnDayGrow:'🌱 เติบโตช้าๆ...',
