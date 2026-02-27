@@ -8,21 +8,39 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <style>
-  :root {
+  :root, [data-theme="dark"] {
     --bg: #0f1117; --card: #1a1d2e; --border: #2a2d3e;
     --accent: #6c5ce7; --accent2: #00cec9; --green: #00b894;
     --red: #ff7675; --text: #dfe6e9; --text2: #a0a4b8;
     --gold: #fdcb6e; --orange: #e17055; --yellow: #ffeaa7;
+    --shadow: rgba(0,0,0,.3);
+  }
+  [data-theme="light"] {
+    --bg: #f0f2f5; --card: #ffffff; --border: #e0e3ea;
+    --accent: #6c5ce7; --accent2: #00a89e; --green: #00a884;
+    --red: #e74c3c; --text: #1a1d2e; --text2: #6b7280;
+    --gold: #d4a017; --orange: #d35400; --yellow: #f39c12;
+    --shadow: rgba(0,0,0,.08);
   }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:16px; }
-  .container { max-width:960px; margin:0 auto; }
-  .app-header { text-align:center; margin-bottom:28px; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:0; }
+  .container { max-width:960px; margin:0 auto; padding:16px; }
+  .app-header { text-align:center; margin-bottom:20px; }
   .app-header .logo { font-size:2.6rem; margin-bottom:2px; }
   .app-header h1 { font-size:1.6rem; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:4px; }
   .app-header .tagline { color:var(--text2); font-size:.88rem; }
   .section-title { display:flex; align-items:center; gap:10px; font-size:1.15rem; font-weight:700; margin-bottom:14px; }
   .section-title .icon { font-size:1.4rem; }
+
+  /* TABS */
+  .tabs { display:flex; background:var(--card); border-radius:14px; padding:4px; margin-bottom:24px; border:1px solid var(--border); position:sticky; top:0; z-index:30; }
+  .tab { flex:1; text-align:center; padding:14px 10px; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all .2s; color:var(--text2); display:flex; align-items:center; justify-content:center; gap:8px; }
+  .tab.active { background:linear-gradient(135deg,var(--accent),#7c6cf0); color:#fff; }
+  .tab:not(.active):hover { background:rgba(255,255,255,.04); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+
+  /* Stats */
   .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:24px; }
   @media(min-width:600px){ .stats { grid-template-columns:repeat(4,1fr); } }
   .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 12px; text-align:center; }
@@ -33,16 +51,26 @@
   .stat-card .value.accent { color:var(--accent); }
   .stat-card .value.gold { color:var(--gold); }
   .stat-card .value.accent2 { color:var(--accent2); }
+  .stat-card.big { grid-column:1/-1; padding:20px; }
+  .stat-card.big .emoji { font-size:2rem; }
+  .stat-card.big .value { font-size:1.8rem; }
+
+  /* Cards */
   .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; }
   .card.pending { border-color:rgba(255,234,167,.3); }
   .card.pending .section-title { color:var(--yellow); }
   .pending-count { display:inline-flex; align-items:center; justify-content:center; background:var(--yellow); color:var(--bg); font-size:.75rem; font-weight:700; width:22px; height:22px; border-radius:50%; }
+
+  /* Form */
   .form-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
   .form-group { display:flex; flex-direction:column; flex:1; min-width:130px; }
   .form-group label { font-size:.82rem; color:var(--text2); margin-bottom:5px; display:flex; align-items:center; gap:5px; }
-  .form-group input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:12px 14px; border-radius:10px; font-size:1rem; outline:none; transition:border-color .2s; }
-  .form-group input:focus { border-color:var(--accent); }
+  .form-group input, .form-group select { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:12px 14px; border-radius:10px; font-size:1rem; outline:none; transition:border-color .2s; }
+  .form-group input:focus, .form-group select:focus { border-color:var(--accent); }
+  .form-group select option { background:var(--bg); color:var(--text); }
   .form-hint { font-size:.82rem; color:var(--text2); margin-bottom:14px; line-height:1.5; }
+
+  /* Buttons */
   .btn { border:none; padding:12px 24px; border-radius:10px; font-size:1rem; cursor:pointer; font-weight:600; transition:transform .1s,opacity .15s; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
   .btn:hover { opacity:.92; }
   .btn:active { transform:scale(.97); }
@@ -56,12 +84,16 @@
   .btn-ghost.danger:hover { background:rgba(255,118,117,.15); }
   .btn-delete { background:rgba(255,118,117,.15); color:var(--red); border:none; padding:6px 12px; border-radius:8px; font-size:.85rem; cursor:pointer; }
   .btn-delete:hover { background:rgba(255,118,117,.25); }
+  .btn-edit { background:rgba(108,92,231,.15); color:var(--accent); border:none; padding:6px 12px; border-radius:8px; font-size:.85rem; cursor:pointer; }
+  .btn-edit:hover { background:rgba(108,92,231,.25); }
   .btn-pm { background:var(--card); border:1px solid var(--border); color:var(--accent); width:40px; height:42px; border-radius:10px; font-size:1.3rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .2s,background .2s; }
   .btn-pm:hover { border-color:var(--accent); background:rgba(108,92,231,.15); }
   .chart-wrapper { position:relative; height:280px; }
+
+  /* Table */
   table { width:100%; border-collapse:collapse; }
   th { text-align:left; font-size:.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; padding:10px; border-bottom:1px solid var(--border); }
-  td { padding:10px; border-bottom:1px solid var(--border); font-size:.9rem; }
+  td { padding:10px; border-bottom:1px solid var(--border); font-size:.9rem; vertical-align:middle; }
   tr:last-child td { border-bottom:none; }
   .plus-value { color:var(--green); font-weight:600; }
   .retrait-value { color:var(--orange); font-weight:600; }
@@ -71,33 +103,63 @@
   .duration-info { color:var(--text2); font-size:.8rem; }
   .empty-state { text-align:center; color:var(--text2); padding:40px 20px; font-size:.95rem; }
   .empty-state .empty-icon { font-size:2.5rem; margin-bottom:10px; }
+
   .admin-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
   .admin-bar-right { display:flex; gap:8px; flex-wrap:wrap; }
   .sep { border:none; border-top:2px solid var(--border); margin:36px 0 28px; }
   .footer { text-align:center; color:var(--text2); font-size:.75rem; margin-top:24px; padding:12px; border-top:1px solid var(--border); }
+
+  /* Asset card */
+  .asset-item { display:flex; align-items:center; gap:14px; padding:14px; background:var(--bg); border-radius:12px; margin-bottom:10px; }
+  .asset-icon { font-size:1.8rem; width:44px; text-align:center; }
+  .asset-info { flex:1; }
+  .asset-name { font-weight:600; font-size:.95rem; margin-bottom:2px; }
+  .asset-date { font-size:.75rem; color:var(--text2); }
+  .asset-value { font-size:1.15rem; font-weight:700; color:var(--accent2); margin-right:8px; }
+  .asset-actions { display:flex; gap:6px; }
+  .asset-history { margin:0 0 10px 58px; padding:8px 12px; background:rgba(255,255,255,.03); border-radius:10px; border:1px solid var(--border); }
+  .asset-history-title { font-size:.78rem; color:var(--text2); margin-bottom:6px; cursor:pointer; display:flex; align-items:center; gap:6px; }
+  .asset-history-title:hover { color:var(--text); }
+  .history-entry { display:flex; align-items:center; justify-content:space-between; padding:4px 0; font-size:.82rem; border-bottom:1px solid rgba(255,255,255,.04); }
+  .history-entry:last-child { border-bottom:none; }
+  .history-entry .he-date { color:var(--text2); }
+  .history-entry .he-value { color:var(--accent2); font-weight:600; }
+  .history-entry .he-del { background:none; border:none; color:var(--red); cursor:pointer; font-size:.75rem; opacity:.5; padding:2px 6px; }
+  .history-entry .he-del:hover { opacity:1; }
+
+  /* Modal */
   .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.75); z-index:100; justify-content:center; align-items:center; }
   .modal-overlay.active { display:flex; }
   .modal { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px; width:90%; max-width:400px; text-align:center; }
   .modal .modal-icon { font-size:2.5rem; margin-bottom:8px; }
   .modal h3 { margin-bottom:6px; font-size:1.2rem; }
   .modal p { color:var(--text2); font-size:.9rem; margin-bottom:20px; line-height:1.4; }
-  .modal input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:14px 16px; border-radius:10px; font-size:1.4rem; text-align:center; letter-spacing:10px; width:100%; outline:none; margin-bottom:16px; }
-  .modal input:focus { border-color:var(--accent); }
+  .modal input, .modal select { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:14px 16px; border-radius:10px; font-size:1.1rem; width:100%; outline:none; margin-bottom:12px; }
+  .modal input:focus, .modal select:focus { border-color:var(--accent); }
   .modal-btns { display:flex; gap:10px; justify-content:center; }
   .modal-btns .btn { flex:1; }
   .modal-error { color:var(--red); font-size:.85rem; margin-bottom:10px; min-height:20px; }
 
-  /* Loading overlay */
+  /* Loading */
   .loading-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
   .loading-overlay.hidden { display:none; }
   .loading-spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent2); border-radius:50%; animation:spin .8s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  .loading-text { color:var(--text2); font-size:.95rem; }
-
-  /* Connection status */
   .conn-status { position:fixed; top:10px; right:10px; padding:5px 12px; border-radius:20px; font-size:.72rem; font-weight:600; z-index:50; }
   .conn-status.online { background:rgba(0,184,148,.2); color:var(--green); }
   .conn-status.offline { background:rgba(255,118,117,.2); color:var(--red); }
+  .theme-toggle { position:fixed; top:10px; left:10px; width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; z-index:50; transition:all .3s; box-shadow:0 2px 8px var(--shadow); }
+  .theme-toggle:hover { transform:scale(1.1); border-color:var(--accent); }
+  [data-theme="light"] .stat-card { box-shadow:0 2px 8px var(--shadow); }
+  [data-theme="light"] .card { box-shadow:0 2px 8px var(--shadow); }
+  [data-theme="light"] .tabs { box-shadow:0 2px 8px var(--shadow); }
+  [data-theme="light"] .form-group input, [data-theme="light"] .form-group select { background:#f8f9fb; }
+  [data-theme="light"] .modal input, [data-theme="light"] .modal select { background:#f8f9fb; }
+  [data-theme="light"] .asset-item { background:#f8f9fb; }
+  [data-theme="light"] .tab:not(.active):hover { background:rgba(0,0,0,.04); }
+  [data-theme="light"] .btn-ghost { background:#e8eaef; color:var(--text2); }
+  [data-theme="light"] .btn-ghost:hover { background:#d8dae0; }
+  [data-theme="light"] .loading-overlay { background:var(--bg); }
 
   @media(max-width:500px){
     .form-row { flex-direction:column; }
@@ -110,15 +172,13 @@
 </head>
 <body>
 
-<!-- Loading -->
 <div class="loading-overlay" id="loadingOverlay">
   <div style="font-size:3rem;">📈</div>
   <div class="loading-spinner"></div>
-  <div class="loading-text">Connexion en cours...</div>
+  <div style="color:var(--text2);font-size:.95rem;">Connexion en cours...</div>
 </div>
-
-<!-- Connection status -->
 <div class="conn-status online" id="connStatus">En ligne</div>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
 
 <div class="container">
   <div class="app-header">
@@ -127,85 +187,142 @@
     <div class="tagline">Regarde ton argent grandir !</div>
   </div>
 
-  <div class="section-title"><span class="icon">💰</span> Comment va ton portefeuille</div>
-  <div class="stats">
-    <div class="stat-card"><div class="emoji">🏦</div><div class="label">Tu as investi</div><div class="value accent" id="totalInvested">0,00 €</div></div>
-    <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaut maintenant</div><div class="value accent2" id="currentValue">0,00 €</div></div>
-    <div class="stat-card"><div class="emoji">🎉</div><div class="label">Tu as gagné</div><div class="value green" id="totalGain">+0,00 €</div></div>
-    <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement</div><div class="value gold" id="totalReturn">0,00%</div></div>
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('invest')">💰 Investissements</div>
+    <div class="tab" onclick="switchTab('patrimoine')">🏠 Patrimoine</div>
   </div>
 
-  <div class="card pending" id="pendingSection" style="display:none;">
-    <div class="section-title"><span class="icon">⏳</span> En attente de validation <span class="pending-count" id="pendingCount">0</span></div>
-    <p class="form-hint">Hugo doit valider ces opérations avec son code secret avant qu'elles comptent.</p>
-    <div id="pendingContainer"></div>
-  </div>
+  <!-- ═══════════════════════════════════ -->
+  <!--         TAB INVESTISSEMENTS        -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="tab-content active" id="tab-invest">
 
-  <div class="card">
-    <div class="section-title"><span class="icon">➕</span> Investir de l'argent</div>
-    <p class="form-hint">Tu veux investir ? Choisis la date et le montant, puis clique sur le bouton. Hugo devra valider ensuite.</p>
-    <div class="form-row">
-      <input type="hidden" id="type" value="invest">
-      <div class="form-group"><label>📅 Date</label><input type="date" id="date"></div>
-      <div class="form-group"><label>💶 Combien tu investis (€)</label><input type="number" id="amount" placeholder="Ex: 50" min="0" step="0.01"></div>
-      <button class="btn btn-primary" onclick="addOperation()">🚀 Investir !</button>
+    <div class="section-title"><span class="icon">💰</span> Comment va ton portefeuille</div>
+    <div class="stats">
+      <div class="stat-card"><div class="emoji">🏦</div><div class="label">Tu as investi</div><div class="value accent" id="totalInvested">0,00 €</div></div>
+      <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaut maintenant</div><div class="value accent2" id="currentValue">0,00 €</div></div>
+      <div class="stat-card"><div class="emoji">🎉</div><div class="label">Tu as gagné</div><div class="value green" id="totalGain">+0,00 €</div></div>
+      <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement</div><div class="value gold" id="totalReturn">0,00%</div></div>
+    </div>
+
+    <div class="card pending" id="pendingSection" style="display:none;">
+      <div class="section-title"><span class="icon">⏳</span> En attente de validation <span class="pending-count" id="pendingCount">0</span></div>
+      <p class="form-hint">Hugo doit valider ces opérations avec son code secret avant qu'elles comptent.</p>
+      <div id="pendingContainer"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="icon">➕</span> Investir de l'argent</div>
+      <p class="form-hint">Tu veux investir ? Choisis la date et le montant, puis clique sur le bouton. Hugo devra valider ensuite.</p>
+      <div class="form-row">
+        <input type="hidden" id="type" value="invest">
+        <div class="form-group"><label>📅 Date</label><input type="date" id="date"></div>
+        <div class="form-group"><label>💶 Combien tu investis (€)</label><input type="number" id="amount" placeholder="Ex: 50" min="0" step="0.01"></div>
+        <button class="btn btn-primary" onclick="addOperation()">🚀 Investir !</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="icon">📈</span> L'évolution de ton argent</div>
+      <p class="form-hint" style="margin-bottom:10px;">La courbe en bleu c'est ce que ton argent vaut vraiment. La ligne violette c'est ce que tu as mis au total.</p>
+      <div class="chart-wrapper"><canvas id="chart"></canvas></div>
+    </div>
+
+    <div class="admin-bar">
+      <div><button class="btn-ghost danger" onclick="askPin('clearAll')">🗑 Tout effacer</button></div>
+      <div class="admin-bar-right"><button class="btn-ghost" onclick="askPin('changePin')">🔑 Changer code</button></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="icon">📋</span> Tes investissements</div>
+      <div id="tableContainer"></div>
+    </div>
+
+    <hr class="sep">
+    <div class="app-header" style="margin-bottom:20px;">
+      <div class="logo">🔮</div>
+      <h1 style="font-size:1.35rem;">Et si j'investissais pendant longtemps ?</h1>
+      <div class="tagline">Découvre combien ton argent peut devenir en investissant régulièrement</div>
+    </div>
+    <div class="card">
+      <div class="section-title"><span class="icon">🎮</span> Choisis tes paramètres</div>
+      <div class="form-row">
+        <div class="form-group"><label>💰 Investissement de départ (€)</label><input type="number" id="simInit" placeholder="Ex: 1000" min="0" step="1" value="1000"></div>
+        <div class="form-group"><label>📅 Chaque mois tu rajoutes (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="100"></div>
+        <div class="form-group"><label>⏰ Pendant combien d'années</label><input type="number" id="simYears" placeholder="Ex: 10" min="1" max="50" step="1" value="10"></div>
+        <div class="form-group">
+          <label>📊 Rendement par an (%)</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button class="btn-pm" onclick="adjRate(-1)">−</button>
+            <input type="number" id="simRate" min="0" max="50" step="0.5" value="8" style="text-align:center;flex:1;">
+            <button class="btn-pm" onclick="adjRate(1)">+</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="runSim()">🚀 Simuler !</button>
+      </div>
+    </div>
+    <div class="stats" id="simStats" style="display:none;">
+      <div class="stat-card"><div class="emoji">🏦</div><div class="label">Tu auras investi au total</div><div class="value accent" id="simTotalInvested">-</div></div>
+      <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaudra</div><div class="value accent2" id="simFinalValue">-</div></div>
+      <div class="stat-card"><div class="emoji">🎉</div><div class="label">Intérêts gagnés</div><div class="value green" id="simInterest">-</div></div>
+      <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement total</div><div class="value gold" id="simReturn">-</div></div>
+    </div>
+    <div class="card" id="simChartCard" style="display:none;">
+      <div class="section-title"><span class="icon">📈</span> Ton argent dans <span id="simChartTitle">10</span> ans</div>
+      <div class="chart-wrapper"><canvas id="simChart"></canvas></div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="section-title"><span class="icon">📈</span> L'évolution de ton argent</div>
-    <p class="form-hint" style="margin-bottom:10px;">La courbe en bleu c'est ce que ton argent vaut vraiment. La ligne violette c'est ce que tu as mis au total.</p>
-    <div class="chart-wrapper"><canvas id="chart"></canvas></div>
-  </div>
+  <!-- ═══════════════════════════════════ -->
+  <!--          TAB PATRIMOINE            -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="tab-content" id="tab-patrimoine">
 
-  <div class="admin-bar">
-    <div><button class="btn-ghost danger" onclick="askPin('clearAll')">🗑 Tout effacer</button></div>
-    <div class="admin-bar-right">
-      <button class="btn-ghost" onclick="askPin('changePin')">🔑 Changer code</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="section-title"><span class="icon">📋</span> Tes investissements</div>
-    <div id="tableContainer"></div>
-  </div>
-
-  <hr class="sep">
-
-  <div class="app-header" style="margin-bottom:20px;">
-    <div class="logo">🔮</div>
-    <h1 style="font-size:1.35rem;">Et si j'investissais pendant longtemps ?</h1>
-    <div class="tagline">Découvre combien ton argent peut devenir en investissant régulièrement</div>
-  </div>
-
-  <div class="card">
-    <div class="section-title"><span class="icon">🎮</span> Choisis tes paramètres</div>
-    <div class="form-row">
-      <div class="form-group"><label>💰 Investissement de départ (€)</label><input type="number" id="simInit" placeholder="Ex: 1000" min="0" step="1" value="1000"></div>
-      <div class="form-group"><label>📅 Chaque mois tu rajoutes (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="100"></div>
-      <div class="form-group"><label>⏰ Pendant combien d'années</label><input type="number" id="simYears" placeholder="Ex: 10" min="1" max="50" step="1" value="10"></div>
-      <div class="form-group">
-        <label>📊 Rendement par an (%)</label>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <button class="btn-pm" onclick="adjRate(-1)">−</button>
-          <input type="number" id="simRate" min="0" max="50" step="0.5" value="8" style="text-align:center;flex:1;">
-          <button class="btn-pm" onclick="adjRate(1)">+</button>
+    <div class="stats">
+      <div class="stat-card big">
+        <div class="emoji">👑</div>
+        <div class="label">Ton patrimoine total</div>
+        <div class="value accent2" id="patrimoineTotal">0,00 €</div>
+        <div style="display:flex; justify-content:center; gap:24px; margin-top:10px; font-size:.78rem; color:var(--text2);">
+          <span>💰 Investissements : <strong id="patrimoineInvest" style="color:var(--accent);">0,00 €</strong></span>
+          <span>🏠 Biens : <strong id="patrimoineAssets" style="color:var(--gold);">0,00 €</strong></span>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="runSim()">🚀 Simuler !</button>
     </div>
-  </div>
 
-  <div class="stats" id="simStats" style="display:none;">
-    <div class="stat-card"><div class="emoji">🏦</div><div class="label">Tu auras investi au total</div><div class="value accent" id="simTotalInvested">-</div></div>
-    <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaudra</div><div class="value accent2" id="simFinalValue">-</div></div>
-    <div class="stat-card"><div class="emoji">🎉</div><div class="label">Intérêts gagnés</div><div class="value green" id="simInterest">-</div></div>
-    <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement total</div><div class="value gold" id="simReturn">-</div></div>
-  </div>
+    <div class="card">
+      <div class="section-title"><span class="icon">➕</span> Ajouter un bien</div>
+      <p class="form-hint">Ajoute tout ce qui a de la valeur : argent liquide, moto, téléphone, console... Tu peux modifier la valeur quand tu veux.</p>
+      <div class="form-row">
+        <div class="form-group">
+          <label>🏷 Catégorie</label>
+          <select id="assetCat">
+            <option value="💵">💵 Argent liquide</option>
+            <option value="🏦">🏦 Compte bancaire bloqué</option>
+            <option value="🏍️">🏍️ Moto / Véhicule</option>
+            <option value="📱">📱 Tech (tel, console...)</option>
+            <option value="👟">👟 Vêtements / Sneakers</option>
+            <option value="🎸">🎸 Loisirs / Collection</option>
+            <option value="💰">💰 Autre</option>
+          </select>
+        </div>
+        <div class="form-group"><label>✏️ Nom</label><input type="text" id="assetName" placeholder="Ex: Ma moto cross"></div>
+        <div class="form-group"><label>💶 Valeur (€)</label><input type="number" id="assetValue" placeholder="Ex: 500" min="0" step="1"></div>
+        <button class="btn btn-primary" onclick="addAsset()">➕ Ajouter</button>
+      </div>
+    </div>
 
-  <div class="card" id="simChartCard" style="display:none;">
-    <div class="section-title"><span class="icon">📈</span> Ton argent dans <span id="simChartTitle">10</span> ans</div>
-    <div class="chart-wrapper"><canvas id="simChart"></canvas></div>
+    <div class="card">
+      <div class="section-title"><span class="icon">📈</span> L'évolution de ton patrimoine</div>
+      <p class="form-hint" style="margin-bottom:10px;">La courbe montre comment ton patrimoine total (investissements + biens) évolue dans le temps.</p>
+      <div class="chart-wrapper"><canvas id="patrimoineChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title"><span class="icon">🏠</span> Tes biens</div>
+      <div id="assetsContainer"></div>
+    </div>
   </div>
 
   <div class="footer">Ton argent grossit de 8% par an grâce aux intérêts composés 🧠</div>
@@ -241,9 +358,40 @@
   </div>
 </div>
 
+<!-- Edit Asset Modal -->
+<div class="modal-overlay" id="editAssetModal">
+  <div class="modal">
+    <div class="modal-icon">✏️</div>
+    <h3>Ajouter / modifier une valeur</h3>
+    <p id="editAssetName">-</p>
+    <label style="font-size:.82rem;color:var(--text2);display:block;margin-bottom:4px;text-align:left;">📅 À quelle date ?</label>
+    <input type="date" id="editAssetDate" style="margin-bottom:12px;">
+    <label style="font-size:.82rem;color:var(--text2);display:block;margin-bottom:4px;text-align:left;">💶 Valeur à cette date (€)</label>
+    <input type="number" id="editAssetValue" placeholder="Nouvelle valeur" min="0" step="1" inputmode="numeric">
+    <div class="modal-btns">
+      <button class="btn btn-red btn-sm" onclick="closeEditAsset()">Annuler</button>
+      <button class="btn btn-green btn-sm" onclick="saveEditAsset()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ══════════════════════════════════════════════
-//  ⚠️  CONFIGURATION FIREBASE - À REMPLACER  ⚠️
+// --- THEME ---
+function toggleTheme(){
+  const curr=document.documentElement.getAttribute('data-theme')||'dark';
+  const next=curr==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  document.getElementById('themeToggle').textContent=next==='dark'?'🌙':'☀️';
+  localStorage.setItem('theme',next);
+}
+(function(){
+  const saved=localStorage.getItem('theme')||'dark';
+  document.documentElement.setAttribute('data-theme',saved);
+  document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('themeToggle').textContent=saved==='dark'?'🌙':'☀️';
+  });
+})();
+
 // ══════════════════════════════════════════════
 const firebaseConfig = {
   apiKey: "AIzaSyAmfQjTfM--hU7rQ2D4rlq0otV3zCZLHxE",
@@ -263,400 +411,395 @@ const ANNUAL_RATE = 0.08;
 const DAILY_RATE = Math.pow(1 + ANNUAL_RATE, 1/365) - 1;
 
 let operations = [];
+let assets = [];
+let patrimoineHistory = [];
 let cachedPin = null;
 let pendingAction = null;
-let dataReady = false;
-let pinReady = false;
+let dataReady = false, pinReady = false, assetsReady = false, histReady = false;
+let appInitialized = false;
+let editingAssetId = null;
 
-// --- CONNECTION STATUS ---
+// --- TABS ---
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (tab==='invest'?0:1)===i));
+  document.getElementById('tab-invest').classList.toggle('active', tab==='invest');
+  document.getElementById('tab-patrimoine').classList.toggle('active', tab==='patrimoine');
+  if (tab==='patrimoine') renderPatrimoine();
+}
+
+// --- CONNECTION ---
 db.ref('.info/connected').on('value', snap => {
   const el = document.getElementById('connStatus');
-  if (snap.val() === true) {
-    el.textContent = 'En ligne';
-    el.className = 'conn-status online';
-  } else {
-    el.textContent = 'Hors ligne';
-    el.className = 'conn-status offline';
-  }
+  if (snap.val()===true) { el.textContent='En ligne'; el.className='conn-status online'; }
+  else { el.textContent='Hors ligne'; el.className='conn-status offline'; }
 });
 
 // --- FIREBASE LISTENERS ---
-db.ref('pin').on('value', snap => {
-  cachedPin = snap.val();
-  pinReady = true;
-  if (dataReady) initApp();
+db.ref('pin').on('value', s => { cachedPin = s.val(); pinReady=true; tryInit(); });
+db.ref('operations').on('value', s => {
+  const d=s.val(); operations=d?Object.values(d):[]; operations.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  dataReady=true; tryInit(); if(appInitialized) render();
+});
+db.ref('assets').on('value', s => {
+  const d=s.val(); assets=d?Object.values(d):[]; assetsReady=true; tryInit(); if(appInitialized) renderPatrimoine();
+});
+db.ref('patrimoineHistory').on('value', s => {
+  const d=s.val(); patrimoineHistory=d?Object.values(d):[]; patrimoineHistory.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  histReady=true; tryInit(); if(appInitialized) renderPatrimoineChart();
 });
 
-db.ref('operations').on('value', snap => {
-  const data = snap.val();
-  operations = data ? Object.values(data) : [];
-  operations.sort((a,b) => new Date(a.date) - new Date(b.date));
-  dataReady = true;
-  if (pinReady) initApp();
-  else render();
-});
-
-let appInitialized = false;
+function tryInit() { if(pinReady && dataReady && assetsReady && histReady && !appInitialized) initApp(); }
 function initApp() {
   document.getElementById('loadingOverlay').classList.add('hidden');
-  if (!appInitialized) {
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-    appInitialized = true;
-    checkFirstRun();
-  }
-  render();
+  document.getElementById('date').value = new Date().toISOString().split('T')[0];
+  appInitialized = true;
+  render(); renderPatrimoine(); checkFirstRun();
 }
-
-// Timeout: if Firebase takes too long, show app anyway
 setTimeout(() => {
-  if (!appInitialized) {
-    document.getElementById('loadingOverlay').classList.add('hidden');
-    document.getElementById('date').value = new Date().toISOString().split('T')[0];
-    appInitialized = true;
-    render();
-    checkFirstRun();
-  }
+  if (!appInitialized) { pinReady=dataReady=assetsReady=histReady=true; initApp(); }
 }, 5000);
 
 // --- PIN ---
 function getPin() { return cachedPin; }
-function setPin(pin) { cachedPin = pin; db.ref('pin').set(pin); }
-
-function checkFirstRun() {
-  if (!getPin()) {
-    document.getElementById('setupModal').classList.add('active');
-  }
-}
-
+function setPin(pin) { cachedPin=pin; db.ref('pin').set(pin); }
+function checkFirstRun() { if(!getPin()) document.getElementById('setupModal').classList.add('active'); }
 function setupPinSubmit() {
-  const pin = document.getElementById('setupPin').value.trim();
-  const confirm = document.getElementById('setupPinConfirm').value.trim();
-  const err = document.getElementById('setupError');
-  if (!/^\d{4,6}$/.test(pin)) { err.textContent = 'Le code doit contenir 4 à 6 chiffres.'; return; }
-  if (pin !== confirm) { err.textContent = 'Les deux codes ne sont pas identiques !'; return; }
-  setPin(pin);
-  document.getElementById('setupModal').classList.remove('active');
+  const pin=document.getElementById('setupPin').value.trim(), confirm=document.getElementById('setupPinConfirm').value.trim(), err=document.getElementById('setupError');
+  if(!/^\d{4,6}$/.test(pin)){err.textContent='Le code doit contenir 4 à 6 chiffres.';return;}
+  if(pin!==confirm){err.textContent='Les deux codes ne sont pas identiques !';return;}
+  setPin(pin); document.getElementById('setupModal').classList.remove('active');
 }
-
 function askPin(action, data) {
-  pendingAction = { action, data };
-  document.getElementById('pinError').textContent = '';
-  document.getElementById('pinInput').value = '';
+  pendingAction={action,data}; document.getElementById('pinError').textContent=''; document.getElementById('pinInput').value='';
   document.getElementById('pinModal').classList.add('active');
-  setTimeout(() => document.getElementById('pinInput').focus(), 100);
-  const titles = {
-    approve: '✅ Valider', reject: '❌ Rejeter', delete: '🗑 Supprimer',
-    clearAll: '🗑 Tout effacer', changePin: '🔑 Changer le code'
-  };
-  document.getElementById('pinTitle').textContent = titles[action] || 'Validation';
-  document.getElementById('pinSubtitle').textContent = 'Tape le code secret de Hugo';
+  setTimeout(()=>document.getElementById('pinInput').focus(),100);
+  const t={approve:'✅ Valider',reject:'❌ Rejeter',delete:'🗑 Supprimer',clearAll:'🗑 Tout effacer',changePin:'🔑 Changer le code',deleteAsset:'🗑 Supprimer le bien'};
+  document.getElementById('pinTitle').textContent=t[action]||'Validation';
+  document.getElementById('pinSubtitle').textContent='Tape le code secret de Hugo';
 }
-
-function closePin() {
-  document.getElementById('pinModal').classList.remove('active');
-  pendingAction = null;
-}
-
+function closePin() { document.getElementById('pinModal').classList.remove('active'); pendingAction=null; }
 function submitPin() {
-  const pin = document.getElementById('pinInput').value.trim();
-  if (pin !== getPin()) {
-    document.getElementById('pinError').textContent = 'Mauvais code ! Réessaye.';
-    document.getElementById('pinInput').value = '';
-    document.getElementById('pinInput').focus();
-    return;
-  }
-  const saved = pendingAction;
-  closePin();
-  if (!saved) return;
-  const { action, data } = saved;
-  switch(action) {
-    case 'approve': approveOp(data); break;
-    case 'reject': rejectOp(data); break;
-    case 'delete': deleteOp(data); break;
-    case 'clearAll': clearAllConfirmed(); break;
-    case 'changePin':
-      document.getElementById('setupModal').classList.add('active');
-      break;
+  const pin=document.getElementById('pinInput').value.trim();
+  if(pin!==getPin()){document.getElementById('pinError').textContent='Mauvais code ! Réessaye.';document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();return;}
+  const saved=pendingAction; closePin(); if(!saved)return;
+  const{action,data}=saved;
+  switch(action){
+    case 'approve':approveOp(data);break; case 'reject':rejectOp(data);break; case 'delete':deleteOp(data);break;
+    case 'clearAll':clearAllConfirmed();break; case 'deleteAsset':deleteAsset(data);break;
+    case 'changePin':document.getElementById('setupModal').classList.add('active');break;
   }
 }
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    if (document.getElementById('pinModal').classList.contains('active')) submitPin();
-    if (document.getElementById('setupModal').classList.contains('active')) setupPinSubmit();
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    if(document.getElementById('pinModal').classList.contains('active'))submitPin();
+    if(document.getElementById('setupModal').classList.contains('active'))setupPinSubmit();
+    if(document.getElementById('editAssetModal').classList.contains('active'))saveEditAsset();
   }
 });
 
 // --- DATA ---
-function saveData() {
-  const obj = {};
-  for (const op of operations) obj[op.id] = op;
-  db.ref('operations').set(obj);
+function saveOps() { const o={}; for(const op of operations) o[op.id]=op; db.ref('operations').set(o); }
+function saveAssets() { const o={}; for(const a of assets) o[a.id]=a; db.ref('assets').set(o); }
+function savePatrimoineSnapshot() {
+  const portfolioVal = calcPortfolioAt(new Date()).currentValue;
+  const assetsVal = assets.reduce((s,a)=>s+a.value,0);
+  const entry = { date:new Date().toISOString(), portfolioValue:Math.round(portfolioVal*100)/100, assetsValue:assetsVal, total:Math.round((portfolioVal+assetsVal)*100)/100, id:Date.now() };
+  patrimoineHistory.push(entry);
+  const o={}; for(const h of patrimoineHistory) o[h.id]=h; db.ref('patrimoineHistory').set(o);
 }
-
-function getApproved() { return operations.filter(o => o.status === 'approved'); }
-function getPending() { return operations.filter(o => o.status === 'pending'); }
+function getApproved() { return operations.filter(o=>o.status==='approved'); }
+function getPending() { return operations.filter(o=>o.status==='pending'); }
 
 // --- CALCULATIONS ---
 function calcPortfolioAt(targetDate) {
-  const target = targetDate instanceof Date ? targetDate : new Date(targetDate);
-  let totalInvested = 0, totalWithdrawn = 0, lots = [];
-  const sorted = [...getApproved()].sort((a, b) => new Date(a.date) - new Date(b.date));
-  for (const op of sorted) {
-    const opDate = new Date(op.date);
-    if (opDate > target) break;
-    if (op.type === 'invest') {
-      lots.push({ amount: op.amount, date: op.date });
-      totalInvested += op.amount;
-    } else if (op.type === 'retrait') {
-      totalWithdrawn += op.amount;
-      let totalVal = 0;
-      for (const lot of lots) totalVal += calcLotValue(lot.amount, lot.date, opDate);
-      if (totalVal > 0) {
-        const ratio = op.amount / totalVal;
-        for (const lot of lots) {
-          const lotVal = calcLotValue(lot.amount, lot.date, opDate);
-          lot.amount = lotVal - lotVal * ratio;
-          lot.date = op.date;
-        }
-      }
+  const target=targetDate instanceof Date?targetDate:new Date(targetDate);
+  let totalInvested=0,totalWithdrawn=0,lots=[];
+  const sorted=[...getApproved()].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  for(const op of sorted){
+    const opDate=new Date(op.date); if(opDate>target)break;
+    if(op.type==='invest'){lots.push({amount:op.amount,date:op.date});totalInvested+=op.amount;}
+    else if(op.type==='retrait'){
+      totalWithdrawn+=op.amount; let totalVal=0;
+      for(const lot of lots) totalVal+=calcLotValue(lot.amount,lot.date,opDate);
+      if(totalVal>0){const ratio=op.amount/totalVal;for(const lot of lots){const lv=calcLotValue(lot.amount,lot.date,opDate);lot.amount=lv-lv*ratio;lot.date=op.date;}}
     }
   }
-  let currentValue = 0;
-  for (const lot of lots) { if (lot.amount > 0) currentValue += calcLotValue(lot.amount, lot.date, target); }
-  return { totalInvested, totalWithdrawn, currentValue };
+  let currentValue=0; for(const lot of lots){if(lot.amount>0)currentValue+=calcLotValue(lot.amount,lot.date,target);}
+  return {totalInvested,totalWithdrawn,currentValue};
 }
-
-function calcLotValue(amount, dateStr, targetDate) {
-  const d = new Date(dateStr);
-  const t = targetDate instanceof Date ? targetDate : new Date(targetDate);
-  const days = Math.max(0, (t - d) / (1000*60*60*24));
-  return amount * Math.pow(1 + DAILY_RATE, days);
+function calcLotValue(amount,dateStr,targetDate){
+  const d=new Date(dateStr),t=targetDate instanceof Date?targetDate:new Date(targetDate);
+  return amount*Math.pow(1+DAILY_RATE,Math.max(0,(t-d)/(1000*60*60*24)));
 }
-
-function fmt(n) { return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
-function fmtDate(d) {
-  const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
-  return d.getDate()+' '+m[d.getMonth()]+' '+d.getFullYear();
-}
-function durationSince(dateStr) {
-  const days = Math.floor((new Date() - new Date(dateStr))/(1000*60*60*24));
-  if (days<1) return "aujourd'hui"; if (days===1) return "hier"; if (days<30) return 'il y a '+days+' j';
-  const mo=Math.floor(days/30.44); if (mo<12) return 'il y a '+mo+' mois';
-  const y=Math.floor(mo/12), r=mo%12;
-  return r===0 ? 'il y a '+y+' an'+(y>1?'s':'') : 'il y a '+y+'a '+r+'m';
+function fmt(n){return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+function fmtDate(d){const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];return d.getDate()+' '+m[d.getMonth()]+' '+d.getFullYear();}
+function durationSince(dateStr){
+  const days=Math.floor((new Date()-new Date(dateStr))/(1000*60*60*24));
+  if(days<1)return"aujourd'hui";if(days===1)return"hier";if(days<30)return'il y a '+days+' j';
+  const mo=Math.floor(days/30.44);if(mo<12)return'il y a '+mo+' mois';
+  const y=Math.floor(mo/12),r=mo%12;return r===0?'il y a '+y+' an'+(y>1?'s':''):'il y a '+y+'a '+r+'m';
 }
 
 // --- OPERATIONS ---
-function addOperation() {
-  const type = document.getElementById('type').value;
-  const date = document.getElementById('date').value;
-  const amount = parseFloat(document.getElementById('amount').value);
-  if (!date || isNaN(amount) || amount <= 0) { alert('Mets une date et un montant !'); return; }
-  operations.push({ type, date, amount, id: Date.now(), status: 'pending', createdAt: new Date().toISOString() });
-  operations.sort((a,b) => new Date(a.date) - new Date(b.date));
-  saveData();
-  document.getElementById('amount').value = '';
+function addOperation(){
+  const type=document.getElementById('type').value,date=document.getElementById('date').value,amount=parseFloat(document.getElementById('amount').value);
+  if(!date||isNaN(amount)||amount<=0){alert('Mets une date et un montant !');return;}
+  operations.push({type,date,amount,id:Date.now(),status:'pending',createdAt:new Date().toISOString()});
+  operations.sort((a,b)=>new Date(a.date)-new Date(b.date)); saveOps();
+  document.getElementById('amount').value='';
   alert('👍 C\'est envoyé ! Hugo doit maintenant valider.');
 }
+function approveOp(id){
+  const op=operations.find(o=>o.id===id); if(!op)return;
+  if(op.type==='retrait'){const p=calcPortfolioAt(new Date(op.date));if(op.amount>p.currentValue+0.01){alert('Le retrait ('+fmt(op.amount)+') dépasse le portefeuille ('+fmt(p.currentValue)+').');return;}}
+  op.status='approved';op.approvedAt=new Date().toISOString(); saveOps(); savePatrimoineSnapshot();
+}
+function rejectOp(id){operations=operations.filter(o=>o.id!==id);saveOps();}
+function deleteOp(id){operations=operations.filter(o=>o.id!==id);saveOps();savePatrimoineSnapshot();}
+function clearAllConfirmed(){if(confirm('Tu es sûr ? Tout sera effacé pour toujours !')){operations=[];saveOps();savePatrimoineSnapshot();}}
 
-function approveOp(id) {
-  const op = operations.find(o => o.id === id);
-  if (!op) return;
-  if (op.type === 'retrait') {
-    const portfolio = calcPortfolioAt(new Date(op.date));
-    if (op.amount > portfolio.currentValue + 0.01) {
-      alert('Le retrait ('+fmt(op.amount)+') est plus grand que le portefeuille ('+fmt(portfolio.currentValue)+') à cette date.');
-      return;
-    }
+// --- ASSETS ---
+function addAsset(){
+  const cat=document.getElementById('assetCat').value, name=document.getElementById('assetName').value.trim(), value=parseFloat(document.getElementById('assetValue').value);
+  if(!name||isNaN(value)||value<0){alert('Mets un nom et une valeur !');return;}
+  const now=new Date().toISOString(), today=now.split('T')[0];
+  const entry={date:today, value, id:Date.now()};
+  assets.push({id:Date.now()+1, cat, name, value, createdAt:now, updatedAt:now, valueHistory:[entry]});
+  saveAssets(); savePatrimoineSnapshot();
+  document.getElementById('assetName').value=''; document.getElementById('assetValue').value='';
+}
+function openEditAsset(id){
+  const a=assets.find(x=>x.id===id); if(!a)return;
+  editingAssetId=id;
+  document.getElementById('editAssetName').textContent=a.cat+' '+a.name;
+  document.getElementById('editAssetDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('editAssetValue').value='';
+  document.getElementById('editAssetModal').classList.add('active');
+  setTimeout(()=>document.getElementById('editAssetValue').focus(),100);
+}
+function closeEditAsset(){document.getElementById('editAssetModal').classList.remove('active');editingAssetId=null;}
+function saveEditAsset(){
+  const v=parseFloat(document.getElementById('editAssetValue').value);
+  const d=document.getElementById('editAssetDate').value;
+  if(!d){alert('Choisis une date !');return;}
+  if(isNaN(v)||v<0){alert('Mets une valeur valide !');return;}
+  const a=assets.find(x=>x.id===editingAssetId); if(!a)return;
+  if(!a.valueHistory) a.valueHistory=[];
+  // Remove existing entry on same date, then add new
+  a.valueHistory=a.valueHistory.filter(h=>h.date!==d);
+  a.valueHistory.push({date:d, value:v, id:Date.now()});
+  a.valueHistory.sort((x,y)=>x.date.localeCompare(y.date));
+  // Current value = latest entry
+  const latest=a.valueHistory[a.valueHistory.length-1];
+  a.value=latest.value; a.updatedAt=new Date().toISOString();
+  saveAssets(); savePatrimoineSnapshot(); closeEditAsset();
+}
+function deleteHistoryEntry(assetId, entryId){
+  const a=assets.find(x=>x.id===assetId); if(!a||!a.valueHistory)return;
+  if(a.valueHistory.length<=1){alert('Tu ne peux pas supprimer la dernière valeur !');return;}
+  a.valueHistory=a.valueHistory.filter(h=>h.id!==entryId);
+  a.valueHistory.sort((x,y)=>x.date.localeCompare(y.date));
+  const latest=a.valueHistory[a.valueHistory.length-1];
+  a.value=latest.value; a.updatedAt=new Date().toISOString();
+  saveAssets(); savePatrimoineSnapshot();
+}
+function deleteAsset(id){assets=assets.filter(a=>a.id!==id);saveAssets();savePatrimoineSnapshot();}
+function getAssetValueAt(asset, date){
+  if(!asset.valueHistory||!asset.valueHistory.length) return asset.value;
+  const ds=typeof date==='string'?date:date.toISOString().split('T')[0];
+  let val=0;
+  for(const h of asset.valueHistory){
+    if(h.date<=ds) val=h.value; else break;
   }
-  op.status = 'approved';
-  op.approvedAt = new Date().toISOString();
-  saveData();
+  return val;
 }
+let openHistoryIds=new Set();
 
-function rejectOp(id) {
-  operations = operations.filter(o => o.id !== id);
-  saveData();
+// --- RENDER INVEST ---
+function updateStats(){
+  const{totalInvested,totalWithdrawn,currentValue}=calcPortfolioAt(new Date());
+  const net=totalInvested-totalWithdrawn,gain=currentValue-net,pct=net>0?(gain/net)*100:0;
+  document.getElementById('totalInvested').textContent=fmt(totalInvested);
+  document.getElementById('currentValue').textContent=fmt(currentValue);
+  document.getElementById('totalGain').textContent=(gain>=0?'+':'')+fmt(gain);
+  document.getElementById('totalReturn').textContent=pct.toFixed(2)+'%';
 }
-
-function deleteOp(id) {
-  operations = operations.filter(o => o.id !== id);
-  saveData();
-}
-
-function clearAllConfirmed() {
-  if (confirm('Tu es sûr ? Tout sera effacé pour toujours !')) {
-    operations = [];
-    saveData();
-  }
-}
-
-// --- RENDER ---
-function updateStats() {
-  const { totalInvested, totalWithdrawn, currentValue } = calcPortfolioAt(new Date());
-  const net = totalInvested - totalWithdrawn;
-  const gain = currentValue - net;
-  const pct = net > 0 ? (gain / net) * 100 : 0;
-  document.getElementById('totalInvested').textContent = fmt(totalInvested);
-  document.getElementById('currentValue').textContent = fmt(currentValue);
-  document.getElementById('totalGain').textContent = (gain>=0?'+':'')+fmt(gain);
-  document.getElementById('totalReturn').textContent = pct.toFixed(2)+'%';
-}
-
-function renderPending() {
-  const pending = getPending();
-  const section = document.getElementById('pendingSection');
-  const container = document.getElementById('pendingContainer');
-  document.getElementById('pendingCount').textContent = pending.length;
-  if (pending.length === 0) { section.style.display = 'none'; return; }
-  section.style.display = 'block';
-  let html = '<table><thead><tr><th>Type</th><th>Date</th><th>Montant</th><th>Actions</th></tr></thead><tbody>';
-  for (const op of pending) {
-    const dateStr = new Date(op.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-    const tc = op.type==='invest'?'type-invest':'type-retrait';
-    const tl = op.type==='invest'?'Investissement':'Retrait';
-    const sign = op.type==='invest'?'+':'-';
-    const ac = op.type==='invest'?'plus-value':'retrait-value';
-    html += `<tr><td><span class="type-badge ${tc}">${tl}</span></td><td>${dateStr}</td><td class="${ac}">${sign}${fmt(op.amount)}</td>
+function renderPending(){
+  const pending=getPending(),section=document.getElementById('pendingSection'),container=document.getElementById('pendingContainer');
+  document.getElementById('pendingCount').textContent=pending.length;
+  if(!pending.length){section.style.display='none';return;} section.style.display='block';
+  let h='<table><thead><tr><th>Type</th><th>Date</th><th>Montant</th><th>Actions</th></tr></thead><tbody>';
+  for(const op of pending){
+    const ds=new Date(op.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const tc=op.type==='invest'?'type-invest':'type-retrait',tl=op.type==='invest'?'Investissement':'Retrait';
+    const sign=op.type==='invest'?'+':'-',ac=op.type==='invest'?'plus-value':'retrait-value';
+    h+=`<tr><td><span class="type-badge ${tc}">${tl}</span></td><td>${ds}</td><td class="${ac}">${sign}${fmt(op.amount)}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-green btn-sm" onclick="askPin('approve',${op.id})">✅ OK</button><button class="btn btn-red btn-sm" onclick="askPin('reject',${op.id})">❌ Non</button></td></tr>`;
   }
-  html += '</tbody></table>';
-  container.innerHTML = html;
+  container.innerHTML=h+'</tbody></table>';
 }
-
-function renderTable() {
-  const container = document.getElementById('tableContainer');
-  const approved = getApproved();
-  if (approved.length === 0) {
-    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🫙</div>Aucun investissement pour le moment.<br>Ajoute ton premier investissement ci-dessus !</div>';
-    return;
-  }
-  let html = '<table><thead><tr><th>Type</th><th>Date</th><th>Depuis</th><th>Montant</th><th></th></tr></thead><tbody>';
-  for (const op of approved) {
-    const dateStr = new Date(op.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
-    const tc = op.type==='invest'?'type-invest':'type-retrait';
-    const tl = op.type==='invest'?'📥 Invest':'📤 Retrait';
-    const sign = op.type==='invest'?'+':'-';
-    const ac = op.type==='invest'?'plus-value':'retrait-value';
-    html += `<tr><td><span class="type-badge ${tc}">${tl}</span></td><td>${dateStr}</td><td><span class="duration-info">${durationSince(op.date)}</span></td>
+function renderTable(){
+  const container=document.getElementById('tableContainer'),approved=getApproved();
+  if(!approved.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">🫙</div>Aucun investissement pour le moment.<br>Ajoute ton premier investissement ci-dessus !</div>';return;}
+  let h='<table><thead><tr><th>Type</th><th>Date</th><th>Depuis</th><th>Montant</th><th></th></tr></thead><tbody>';
+  for(const op of approved){
+    const ds=new Date(op.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const tc=op.type==='invest'?'type-invest':'type-retrait',tl=op.type==='invest'?'📥 Invest':'📤 Retrait';
+    const sign=op.type==='invest'?'+':'-',ac=op.type==='invest'?'plus-value':'retrait-value';
+    h+=`<tr><td><span class="type-badge ${tc}">${tl}</span></td><td>${ds}</td><td><span class="duration-info">${durationSince(op.date)}</span></td>
       <td class="${ac}">${sign}${fmt(op.amount)}</td><td><button class="btn-delete" onclick="askPin('delete',${op.id})">🗑</button></td></tr>`;
   }
-  html += '</tbody></table>';
-  container.innerHTML = html;
+  container.innerHTML=h+'</tbody></table>';
+}
+let chartInstance=null;
+function renderChart(){
+  const approved=getApproved().filter(o=>o.type==='invest');
+  if(!approved.length){if(chartInstance){chartInstance.destroy();chartInstance=null;}return;}
+  const sorted=[...getApproved()].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const start=new Date(sorted[0].date),today=new Date();
+  const labels=[],valueData=[],investedData=[],totalDays=(today-start)/(1000*60*60*24);
+  const step=totalDays>730?14:totalDays>365?7:totalDays>90?3:1;
+  for(let d=new Date(start);d<=today;d.setDate(d.getDate()+step)){
+    const s=calcPortfolioAt(new Date(d)); labels.push(fmtDate(new Date(d)));
+    valueData.push(Math.round(s.currentValue*100)/100); investedData.push(Math.round((s.totalInvested-s.totalWithdrawn)*100)/100);
+  }
+  const f=calcPortfolioAt(today); labels.push(fmtDate(today));
+  valueData.push(Math.round(f.currentValue*100)/100); investedData.push(Math.round((f.totalInvested-f.totalWithdrawn)*100)/100);
+  const ctx=document.getElementById('chart').getContext('2d');
+  if(chartInstance)chartInstance.destroy();
+  chartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'Ton argent',data:valueData,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
+    {label:'Ce que tu as mis',data:investedData,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:10,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
 }
 
-let chartInstance = null;
-function renderChart() {
-  const approved = getApproved().filter(o => o.type === 'invest');
-  if (approved.length === 0) { if (chartInstance){chartInstance.destroy();chartInstance=null;} return; }
-  const sorted = [...getApproved()].sort((a,b) => new Date(a.date)-new Date(b.date));
-  const start = new Date(sorted[0].date);
-  const today = new Date();
-  const labels=[], valueData=[], investedData=[];
-  const totalDays = (today-start)/(1000*60*60*24);
-  const step = totalDays>730?14:totalDays>365?7:totalDays>90?3:1;
-  for (let d=new Date(start); d<=today; d.setDate(d.getDate()+step)) {
-    const s = calcPortfolioAt(new Date(d));
-    labels.push(fmtDate(new Date(d)));
-    valueData.push(Math.round(s.currentValue*100)/100);
-    investedData.push(Math.round((s.totalInvested-s.totalWithdrawn)*100)/100);
-  }
-  const f = calcPortfolioAt(today);
-  labels.push(fmtDate(today));
-  valueData.push(Math.round(f.currentValue*100)/100);
-  investedData.push(Math.round((f.totalInvested-f.totalWithdrawn)*100)/100);
-  const ctx = document.getElementById('chart').getContext('2d');
-  if (chartInstance) chartInstance.destroy();
-  chartInstance = new Chart(ctx, {
-    type:'line',
-    data:{ labels, datasets:[
-      { label:'Ton argent', data:valueData, borderColor:'#00cec9', backgroundColor:'rgba(0,206,201,.1)', fill:true, tension:.3, pointRadius:0, borderWidth:2 },
-      { label:'Ce que tu as mis', data:investedData, borderColor:'#6c5ce7', backgroundColor:'rgba(108,92,231,.05)', fill:true, tension:.3, pointRadius:0, borderWidth:2, borderDash:[5,5] }
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{intersect:false,mode:'index'},
-      plugins:{
-        legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},
-        tooltip:{ backgroundColor:'#1a1d2e', borderColor:'#2a2d3e', borderWidth:1, titleColor:'#dfe6e9', bodyColor:'#dfe6e9',
-          callbacks:{ label:c=>c.dataset.label+': '+fmt(c.parsed.y) } }
-      },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',maxTicksLimit:10,maxRotation:45,minRotation:20} },
-        y:{ beginAtZero:true, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'} }
+// --- RENDER PATRIMOINE ---
+function renderPatrimoine(){
+  const portfolioVal=calcPortfolioAt(new Date()).currentValue;
+  const assetsVal=assets.reduce((s,a)=>s+a.value,0);
+  document.getElementById('patrimoineTotal').textContent=fmt(portfolioVal+assetsVal);
+  document.getElementById('patrimoineInvest').textContent=fmt(portfolioVal);
+  document.getElementById('patrimoineAssets').textContent=fmt(assetsVal);
+  renderAssetsList(); renderPatrimoineChart();
+}
+function renderAssetsList(){
+  const container=document.getElementById('assetsContainer');
+  if(!assets.length){container.innerHTML='<div class="empty-state"><div class="empty-icon">🏠</div>Aucun bien pour le moment.<br>Ajoute ton premier bien ci-dessus !</div>';return;}
+  let h='';
+  for(const a of assets){
+    const dateStr=new Date(a.updatedAt||a.createdAt).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const histCount=(a.valueHistory||[]).length;
+    const isOpen=openHistoryIds.has(a.id);
+    h+=`<div class="asset-item">
+      <div class="asset-icon">${a.cat}</div>
+      <div class="asset-info"><div class="asset-name">${a.name}</div><div class="asset-date">Mis à jour le ${dateStr}</div></div>
+      <div class="asset-value">${fmt(a.value)}</div>
+      <div class="asset-actions">
+        <button class="btn-edit" onclick="openEditAsset(${a.id})" title="Ajouter une valeur">✏️</button>
+        <button class="btn-delete" onclick="askPin('deleteAsset',${a.id})">🗑</button>
+      </div>
+    </div>`;
+    if(histCount>0){
+      h+=`<div class="asset-history">
+        <div class="asset-history-title" onclick="toggleHistory(${a.id})">${isOpen?'▼':'▶'} Historique des valeurs (${histCount})</div>`;
+      if(isOpen){
+        h+='<div>';
+        for(const entry of (a.valueHistory||[])){
+          const ed=new Date(entry.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+          h+=`<div class="history-entry">
+            <span class="he-date">${ed}</span>
+            <span class="he-value">${fmt(entry.value)}</span>
+            ${histCount>1?`<button class="he-del" onclick="deleteHistoryEntry(${a.id},${entry.id})">✕</button>`:''}
+          </div>`;
+        }
+        h+='</div>';
       }
+      h+='</div>';
     }
-  });
+  }
+  container.innerHTML=h;
+}
+function toggleHistory(assetId){
+  if(openHistoryIds.has(assetId)) openHistoryIds.delete(assetId); else openHistoryIds.add(assetId);
+  renderAssetsList();
+}
+let patrimoineChartInst=null;
+function renderPatrimoineChart(){
+  // Collect all relevant dates from asset histories + operations
+  const dateSet=new Set();
+  for(const a of assets){
+    if(a.valueHistory) for(const h of a.valueHistory) dateSet.add(h.date);
+  }
+  for(const op of getApproved()) dateSet.add(op.date);
+  const today=new Date().toISOString().split('T')[0];
+  dateSet.add(today);
+
+  if(dateSet.size<1){if(patrimoineChartInst){patrimoineChartInst.destroy();patrimoineChartInst=null;}return;}
+
+  const dates=[...dateSet].sort();
+  // Fill gaps: add weekly points between first and last date
+  const first=new Date(dates[0]+'T00:00:00'), last=new Date(dates[dates.length-1]+'T00:00:00');
+  const totalDays=(last-first)/(1000*60*60*24);
+  const step=totalDays>730?14:totalDays>365?7:totalDays>90?3:1;
+  for(let d=new Date(first);d<=last;d.setDate(d.getDate()+step)){
+    dateSet.add(d.toISOString().split('T')[0]);
+  }
+  const allDates=[...dateSet].sort();
+
+  const labels=[],totals=[],investVals=[],assetVals=[];
+  for(const ds of allDates){
+    const d=new Date(ds+'T00:00:00');
+    const pv=calcPortfolioAt(d).currentValue;
+    let av=0;
+    for(const a of assets) av+=getAssetValueAt(a,ds);
+    labels.push(fmtDate(d));
+    investVals.push(Math.round(pv*100)/100);
+    assetVals.push(Math.round(av*100)/100);
+    totals.push(Math.round((pv+av)*100)/100);
+  }
+
+  const ctx=document.getElementById('patrimoineChart').getContext('2d');
+  if(patrimoineChartInst)patrimoineChartInst.destroy();
+  patrimoineChartInst=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'Patrimoine total',data:totals,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
+    {label:'Investissements',data:investVals,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:false,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]},
+    {label:'Biens',data:assetVals,borderColor:'#fdcb6e',backgroundColor:'rgba(253,203,110,.05)',fill:false,tension:.3,pointRadius:0,borderWidth:2,borderDash:[3,3]}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:10,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
 }
 
 // --- SIMULATEUR ---
-let simChartInstance = null;
-function adjRate(delta) {
-  const el = document.getElementById('simRate');
-  let v = parseFloat(el.value) || 8;
-  v = Math.round((v + delta) * 10) / 10;
-  if (v < 0) v = 0; if (v > 50) v = 50;
-  el.value = v;
+let simChartInstance=null;
+function adjRate(delta){const el=document.getElementById('simRate');let v=parseFloat(el.value)||8;v=Math.round((v+delta)*10)/10;if(v<0)v=0;if(v>50)v=50;el.value=v;}
+function runSim(){
+  const init=parseFloat(document.getElementById('simInit').value)||0,monthly=parseFloat(document.getElementById('simMonthly').value)||0;
+  const years=parseInt(document.getElementById('simYears').value)||1,annualRate=(parseFloat(document.getElementById('simRate').value)||8)/100;
+  if(init<=0&&monthly<=0){alert('Mets au moins un montant !');return;}
+  const monthlyRate=Math.pow(1+annualRate,1/12)-1,totalMonths=years*12;
+  const labels=[],valueData=[],investedData=[]; let balance=init,totalInvested=init;
+  labels.push('Début');valueData.push(Math.round(balance*100)/100);investedData.push(Math.round(totalInvested*100)/100);
+  for(let m=1;m<=totalMonths;m++){balance=balance*(1+monthlyRate)+monthly;totalInvested+=monthly;labels.push(m%12===0?'An '+(m/12):'M'+m);valueData.push(Math.round(balance*100)/100);investedData.push(Math.round(totalInvested*100)/100);}
+  const interest=balance-totalInvested,returnPct=totalInvested>0?(interest/totalInvested*100):0;
+  document.getElementById('simStats').style.display='';document.getElementById('simChartCard').style.display='';
+  document.getElementById('simTotalInvested').textContent=fmt(totalInvested);document.getElementById('simFinalValue').textContent=fmt(balance);
+  document.getElementById('simInterest').textContent=fmt(interest);document.getElementById('simReturn').textContent=returnPct.toFixed(1)+' %';
+  document.getElementById('simChartTitle').textContent=years;
+  const step=Math.max(1,Math.floor(totalMonths/60));const fL=[],fV=[],fI=[];
+  for(let i=0;i<labels.length;i++){if(i===0||i===labels.length-1||i%step===0){fL.push(labels[i]);fV.push(valueData[i]);fI.push(investedData[i]);}}
+  const ctx=document.getElementById('simChart').getContext('2d');
+  if(simChartInstance)simChartInstance.destroy();
+  simChartInstance=new Chart(ctx,{type:'line',data:{labels:fL,datasets:[
+    {label:'Ton argent',data:fV,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
+    {label:'Ce que tu as mis',data:fI,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
+  ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
+    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+    scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:12,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
 }
 
-function runSim() {
-  const init = parseFloat(document.getElementById('simInit').value) || 0;
-  const monthly = parseFloat(document.getElementById('simMonthly').value) || 0;
-  const years = parseInt(document.getElementById('simYears').value) || 1;
-  const annualRate = (parseFloat(document.getElementById('simRate').value) || 8) / 100;
-  if (init <= 0 && monthly <= 0) { alert('Mets au moins un montant de départ ou un montant mensuel !'); return; }
-  const monthlyRate = Math.pow(1 + annualRate, 1/12) - 1;
-  const totalMonths = years * 12;
-  const labels = [], valueData = [], investedData = [];
-  let balance = init, totalInvested = init;
-  labels.push('Début'); valueData.push(Math.round(balance*100)/100); investedData.push(Math.round(totalInvested*100)/100);
-  for (let m = 1; m <= totalMonths; m++) {
-    balance = balance * (1 + monthlyRate) + monthly;
-    totalInvested += monthly;
-    labels.push(m % 12 === 0 ? 'An ' + (m/12) : 'M' + m);
-    valueData.push(Math.round(balance*100)/100);
-    investedData.push(Math.round(totalInvested*100)/100);
-  }
-  const interest = balance - totalInvested;
-  const returnPct = totalInvested > 0 ? (interest / totalInvested * 100) : 0;
-  document.getElementById('simStats').style.display = '';
-  document.getElementById('simChartCard').style.display = '';
-  document.getElementById('simTotalInvested').textContent = fmt(totalInvested);
-  document.getElementById('simFinalValue').textContent = fmt(balance);
-  document.getElementById('simInterest').textContent = fmt(interest);
-  document.getElementById('simReturn').textContent = returnPct.toFixed(1) + ' %';
-  document.getElementById('simChartTitle').textContent = years;
-  const step = Math.max(1, Math.floor(totalMonths / 60));
-  const fLabels=[], fValue=[], fInvested=[];
-  for (let i=0; i<labels.length; i++) {
-    if (i===0 || i===labels.length-1 || i%step===0) { fLabels.push(labels[i]); fValue.push(valueData[i]); fInvested.push(investedData[i]); }
-  }
-  const ctx = document.getElementById('simChart').getContext('2d');
-  if (simChartInstance) simChartInstance.destroy();
-  simChartInstance = new Chart(ctx, {
-    type:'line',
-    data:{ labels:fLabels, datasets:[
-      { label:'Ton argent', data:fValue, borderColor:'#00cec9', backgroundColor:'rgba(0,206,201,.1)', fill:true, tension:.3, pointRadius:0, borderWidth:2 },
-      { label:'Ce que tu as mis', data:fInvested, borderColor:'#6c5ce7', backgroundColor:'rgba(108,92,231,.05)', fill:true, tension:.3, pointRadius:0, borderWidth:2, borderDash:[5,5] }
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{intersect:false,mode:'index'},
-      plugins:{
-        legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},
-        tooltip:{ backgroundColor:'#1a1d2e', borderColor:'#2a2d3e', borderWidth:1, titleColor:'#dfe6e9', bodyColor:'#dfe6e9',
-          callbacks:{ label:c=>c.dataset.label+': '+fmt(c.parsed.y) } }
-      },
-      scales:{
-        x:{ grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',maxTicksLimit:12,maxRotation:45,minRotation:20} },
-        y:{ beginAtZero:true, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'} }
-      }
-    }
-  });
-}
-
-function render() { updateStats(); renderPending(); renderTable(); renderChart(); }
+function render(){updateStats();renderPending();renderTable();renderChart();}
 </script>
 </body>
 </html>
