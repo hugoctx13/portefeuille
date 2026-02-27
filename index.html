@@ -64,7 +64,7 @@
   .stat-card.big { grid-column:1/-1; padding:20px; }
   .stat-card.big .emoji { font-size:2rem; }
   .stat-card.big .value { font-size:1.8rem; }
-  .earnings-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; margin-bottom:24px; }
+  .earnings-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:10px; margin-bottom:24px; }
   .earnings-card { background:linear-gradient(135deg, var(--card) 0%, rgba(0,184,148,.08) 100%); border-color:rgba(0,184,148,.25); position:relative; overflow:hidden; }
   .earnings-card .value { font-size:1.35rem; }
   .earnings-sub { font-size:.7rem; color:var(--text2); margin-top:4px; font-style:italic; }
@@ -155,6 +155,11 @@
   .modal-btns { display:flex; gap:10px; justify-content:center; }
   .modal-btns .btn { flex:1; }
   .modal-error { color:var(--red); font-size:.85rem; margin-bottom:10px; min-height:20px; }
+  .otp-digit { width:52px!important; height:60px; text-align:center; font-size:1.6rem; font-weight:700; border-radius:14px; border:2px solid var(--border); background:var(--bg); color:var(--text); outline:none; transition:all .2s; padding:0!important; margin:0; caret-color:var(--accent); }
+  .otp-digit:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(255,107,129,.2); transform:scale(1.05); }
+  .otp-digit.filled { border-color:var(--accent); background:rgba(255,107,129,.06); }
+  .otp-digit.error { border-color:var(--red); animation:otpShake .4s; }
+  @keyframes otpShake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 
   /* Loading */
   .loading-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
@@ -174,9 +179,7 @@
   .pw-eye.showing { opacity:1; }
   .lock-btn { width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition:all .3s; box-shadow:0 2px 8px var(--shadow); }
   .lock-btn:hover { transform:scale(1.1); border-color:var(--accent); }
-  .lang-select { height:42px; border-radius:21px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:.85rem; padding:0 12px; cursor:pointer; outline:none; box-shadow:0 2px 8px var(--shadow); transition:all .3s; appearance:none; -webkit-appearance:none; text-align:center; min-width:72px; }
-  .lang-select:hover { border-color:var(--accent); }
-  [dir="rtl"] .form-row { direction:rtl; }
+    [dir="rtl"] .form-row { direction:rtl; }
   [dir="rtl"] .section-title { direction:rtl; }
   [dir="rtl"] th { text-align:right; }
   [dir="rtl"] .asset-item { direction:rtl; }
@@ -204,7 +207,8 @@
     .admin-bar-right { justify-content:center; }
     .tabs { border-radius:10px; }
     .tab { padding:10px 6px; font-size:.85rem; gap:4px; }
-    .earnings-row { grid-template-columns:1fr; }
+    .earnings-row { grid-template-columns:1fr 1fr; }
+    .earnings-row .earnings-card-year { grid-column:1/-1; }
     .earnings-card .value { font-size:1.15rem; }
     .stat-card .value { font-size:1.05rem; }
     .stat-card .emoji { font-size:1.3rem; }
@@ -214,6 +218,7 @@
     .asset-value { font-size:1rem; }
     .asset-actions { gap:4px; }
     .modal { padding:24px 18px; }
+    .otp-digit { width:46px!important; height:54px; font-size:1.4rem; border-radius:12px; }
     .app-header h1 { font-size:1.3rem; }
     table { display:block; overflow-x:auto; -webkit-overflow-scrolling:touch; }
     th, td { white-space:nowrap; padding:8px 6px; font-size:.8rem; }
@@ -242,14 +247,6 @@
 <div class="container" id="appContainer" style="display:none;">
   <div class="top-bar">
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
-    <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
-      <option value="fr">🇫🇷 FR</option>
-      <option value="en">🇬🇧 EN</option>
-      <option value="ru">🇷🇺 RU</option>
-      <option value="ar">🇸🇦 AR</option>
-      <option value="ja">🇯🇵 JA</option>
-      <option value="th">🇹🇭 TH</option>
-    </select>
     <button class="lock-btn" onclick="openSettingsModal()" title="Paramètres des codes">🔒</button>
   </div>
   <div class="app-header">
@@ -299,6 +296,7 @@
     <div class="earnings-row">
       <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label" data-i18n="earnDay">Tu gagnes par jour</div><div class="value green" id="earningsPerDay">+0,00 €</div><div class="earnings-sub" id="earningsPerDaySub"></div></div>
       <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label" data-i18n="earnMonth">Tu gagnes par mois</div><div class="value green" id="earningsPerMonth">+0,00 €</div><div class="earnings-sub" id="earningsPerMonthSub"></div></div>
+      <div class="stat-card earnings-card earnings-card-year"><div class="emoji">🏆</div><div class="label" data-i18n="earnYear">Tu gagnes par an</div><div class="value green" id="earningsPerYear">+0,00 €</div><div class="earnings-sub" id="earningsPerYearSub"></div></div>
     </div>
 
     <div class="card pending" id="pendingSection" style="display:none;">
@@ -365,6 +363,7 @@
     <div class="earnings-row" id="simEarningsRow" style="display:none;">
       <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label" data-i18n="simEarnDay">Tu gagneras par jour</div><div class="value green" id="simEarningsPerDay">+0,00 €</div><div class="earnings-sub" id="simEarningsPerDaySub"></div></div>
       <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label" data-i18n="simEarnMonth">Tu gagneras par mois</div><div class="value green" id="simEarningsPerMonth">+0,00 €</div><div class="earnings-sub" id="simEarningsPerMonthSub"></div></div>
+      <div class="stat-card earnings-card earnings-card-year"><div class="emoji">🏆</div><div class="label" data-i18n="simEarnYear">Tu gagneras par an</div><div class="value green" id="simEarningsPerYear">+0,00 €</div><div class="earnings-sub" id="simEarningsPerYearSub"></div></div>
     </div>
     <div class="card" id="simChartCard" style="display:none;">
       <div class="section-title"><span class="icon">📈</span> <span data-i18n="simChartPre">Ton argent dans</span> <span id="simChartTitle">10</span> <span data-i18n="simChartPost">ans</span></div>
@@ -426,16 +425,19 @@
 
 <!-- PIN Modal -->
 <div class="modal-overlay" id="pinModal">
-  <div class="modal">
+  <div class="modal" style="position:relative;">
+    <button onclick="closePin()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.4rem;color:var(--text2);cursor:pointer;padding:4px 8px;line-height:1;border-radius:8px;transition:all .2s;" onmouseover="this.style.color='var(--red)';this.style.background='rgba(255,0,0,.08)'" onmouseout="this.style.color='var(--text2)';this.style.background='none'">✕</button>
     <div class="modal-icon">🔒</div>
     <h3 id="pinTitle">Code secret</h3>
     <p id="pinSubtitle">Tape le code secret de Hugo</p>
     <div class="modal-error" id="pinError"></div>
-    <input type="password" id="pinInput" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off">
-    <div class="modal-btns">
-      <button class="btn btn-red btn-sm" onclick="closePin()">Annuler</button>
-      <button class="btn btn-green btn-sm" onclick="submitPin()">OK</button>
+    <div class="otp-wrap" id="otpWrap" style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
+      <input class="otp-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input class="otp-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input class="otp-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+      <input class="otp-digit" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
     </div>
+    <input type="hidden" id="pinInput">
   </div>
 </div>
 
@@ -473,15 +475,21 @@
 
 <!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
-  <div class="modal">
+  <div class="modal" style="position:relative;">
+    <button onclick="closeSettings()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.4rem;color:var(--text2);cursor:pointer;padding:4px 8px;line-height:1;border-radius:8px;transition:all .2s;" onmouseover="this.style.color='var(--red)';this.style.background='rgba(255,0,0,.08)'" onmouseout="this.style.color='var(--text2)';this.style.background='none'">✕</button>
     <div class="modal-icon">🔒</div>
     <h3>Paramètres</h3>
     <!-- Step 1: Enter admin code -->
     <div id="settingsStep1">
       <p>Entre le code admin</p>
       <div class="modal-error" id="settingsError1"></div>
-      <div class="pw-wrap"><input type="password" id="settingsAdminPin" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off"><button type="button" class="pw-eye" onclick="togglePw(this)">👁</button></div>
-      <button class="btn btn-red btn-sm" onclick="closeSettings()" style="width:100%;">Annuler</button>
+      <div class="otp-wrap" id="settingsOtpWrap" style="display:flex;gap:12px;justify-content:center;margin-bottom:16px;">
+        <input class="otp-digit settings-otp" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+        <input class="otp-digit settings-otp" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+        <input class="otp-digit settings-otp" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+        <input class="otp-digit settings-otp" type="password" inputmode="numeric" maxlength="1" autocomplete="off">
+      </div>
+      <input type="hidden" id="settingsAdminPin">
     </div>
     <!-- Step 2: Change codes -->
     <div id="settingsStep2" style="display:none;">
@@ -498,8 +506,7 @@
       <label style="font-size:.82rem;color:var(--text2);display:block;margin-bottom:4px;text-align:left;">🔑 Nouveau code admin (4 chiffres)</label>
       <div class="pw-wrap"><input type="password" id="settingsNewPin" maxlength="4" placeholder="Laisser vide" inputmode="numeric" autocomplete="off"><button type="button" class="pw-eye" onclick="togglePw(this)">👁</button></div>
       <div class="modal-btns">
-        <button class="btn btn-red btn-sm" onclick="closeSettings()">Annuler</button>
-        <button class="btn btn-green btn-sm" onclick="settingsSave()">💾 Enregistrer</button>
+        <button class="btn btn-green btn-sm" onclick="settingsSave()" style="width:100%;">💾 Enregistrer</button>
       </div>
     </div>
   </div>
@@ -512,7 +519,7 @@ const T={
 fr:{title:'Mon Portefeuille',tagline:'Regarde ton argent grandir !',lockHint:"Tape le code d'accès",lockError:'Mauvais code !',connecting:'Connexion en cours...',
 tabInvest:'💰 Investissements',tabPatrimoine:'🏠 Patrimoine',
 statsTitle:'Comment va ton portefeuille',statsInvested:'Tu as investi',statsWorth:'Ca vaut maintenant',statsGained:'Tu as gagné',statsReturn:'Rendement',
-earnDay:'Tu gagnes par jour',earnMonth:'Tu gagnes par mois',
+earnDay:'Tu gagnes par jour',earnMonth:'Tu gagnes par mois',earnYear:'Tu gagnes par an',
 earnDaySleep:'💪 Même en dormant !',earnDayGrow:'🌱 Ça pousse doucement...',
 earnMonthFire:'🔥 Pas mal du tout !',earnMonthGood:'📈 Ça monte bien !',earnMonthKeep:'🌱 Continue comme ça !',
 pendingTitle:'En attente de validation',pendingHint:"Hugo doit valider ces opérations avec son code secret avant qu'elles comptent.",
@@ -526,7 +533,7 @@ emptyInvest:'Aucun investissement pour le moment.<br>Ajoute ton premier investis
 simTitle:"Et si j'investissais pendant longtemps ?",simTagline:'Découvre combien ton argent peut devenir en investissant régulièrement',
 simParams:'Choisis tes paramètres',simLabelInit:'💰 Investissement de départ (€)',simLabelMonthly:'📅 Chaque mois tu rajoutes (€)',simLabelYears:"⏰ Pendant combien d'années",simLabelRate:'📊 Rendement par an (%)',btnSimulate:'🚀 Simuler !',
 simInvested:'Tu auras investi au total',simWorth:'Ca vaudra',simInterest:'Intérêts gagnés',simReturnLabel:'Rendement total',
-simEarnDay:'Tu gagneras par jour',simEarnMonth:'Tu gagneras par mois',
+simEarnDay:'Tu gagneras par jour',simEarnMonth:'Tu gagneras par mois',simEarnYear:'Tu gagneras par an',
 simChartPre:'Ton argent dans',simChartPost:'ans',
 simEDMachine:'🤑 Machine à billets !',simEDSleep:'💪 Même en dormant !',simEDGrow:'🌱 Ça pousse doucement...',
 simEMSalary:'🏆 Un vrai salaire passif !',simEMFire:'🔥 Pas mal du tout !',simEMGood:'📈 Ça monte bien !',simEMKeep:'🌱 Continue comme ça !',
@@ -552,7 +559,7 @@ today:"aujourd'hui",yesterday:'hier',daysAgo:'il y a {n} j',monthsAgo:'il y a {n
 en:{title:'My Portfolio',tagline:'Watch your money grow!',lockHint:'Enter access code',lockError:'Wrong code!',connecting:'Connecting...',
 tabInvest:'💰 Investments',tabPatrimoine:'🏠 Assets',
 statsTitle:'How is your portfolio doing',statsInvested:'You invested',statsWorth:'Worth now',statsGained:'You earned',statsReturn:'Return',
-earnDay:'You earn per day',earnMonth:'You earn per month',
+earnDay:'You earn per day',earnMonth:'You earn per month',earnYear:'You earn per year',
 earnDaySleep:'💪 Even while sleeping!',earnDayGrow:'🌱 Growing slowly...',
 earnMonthFire:'🔥 Not bad at all!',earnMonthGood:'📈 Going up nicely!',earnMonthKeep:'🌱 Keep it up!',
 pendingTitle:'Pending validation',pendingHint:'Hugo must validate these operations with his secret code before they count.',
@@ -566,7 +573,7 @@ emptyInvest:'No investments yet.<br>Add your first investment above!',
 simTitle:'What if I invested long-term?',simTagline:'Discover how much your money can become with regular investing',
 simParams:'Choose your settings',simLabelInit:'💰 Initial investment (€)',simLabelMonthly:'📅 Monthly contribution (€)',simLabelYears:'⏰ How many years',simLabelRate:'📊 Annual return (%)',btnSimulate:'🚀 Simulate!',
 simInvested:'Total invested',simWorth:'It will be worth',simInterest:'Interest earned',simReturnLabel:'Total return',
-simEarnDay:'You will earn per day',simEarnMonth:'You will earn per month',
+simEarnDay:'You will earn per day',simEarnMonth:'You will earn per month',simEarnYear:'You will earn per year',
 simChartPre:'Your money in',simChartPost:'years',
 simEDMachine:'🤑 Money machine!',simEDSleep:'💪 Even while sleeping!',simEDGrow:'🌱 Growing slowly...',
 simEMSalary:'🏆 Real passive income!',simEMFire:'🔥 Not bad at all!',simEMGood:'📈 Going up nicely!',simEMKeep:'🌱 Keep it up!',
@@ -592,7 +599,7 @@ today:'today',yesterday:'yesterday',daysAgo:'{n} days ago',monthsAgo:'{n} months
 ru:{title:'Мой Портфель',tagline:'Смотри, как растут твои деньги!',lockHint:'Введи код доступа',lockError:'Неверный код!',connecting:'Подключение...',
 tabInvest:'💰 Инвестиции',tabPatrimoine:'🏠 Имущество',
 statsTitle:'Как дела у портфеля',statsInvested:'Ты вложил',statsWorth:'Сейчас стоит',statsGained:'Ты заработал',statsReturn:'Доходность',
-earnDay:'Ты зарабатываешь в день',earnMonth:'Ты зарабатываешь в месяц',
+earnDay:'Ты зарабатываешь в день',earnMonth:'Ты зарабатываешь в месяц',earnYear:'Ты зарабатываешь в год',
 earnDaySleep:'💪 Даже во сне!',earnDayGrow:'🌱 Растёт потихоньку...',
 earnMonthFire:'🔥 Неплохо!',earnMonthGood:'📈 Хорошо растёт!',earnMonthKeep:'🌱 Продолжай!',
 pendingTitle:'Ожидают подтверждения',pendingHint:'Гуго должен подтвердить эти операции своим секретным кодом.',
@@ -606,7 +613,7 @@ emptyInvest:'Пока нет инвестиций.<br>Добавь первую 
 simTitle:'А если вкладывать долго?',simTagline:'Узнай, сколько денег можно накопить при регулярных вложениях',
 simParams:'Выбери параметры',simLabelInit:'💰 Начальная сумма (€)',simLabelMonthly:'📅 Каждый месяц добавляешь (€)',simLabelYears:'⏰ Сколько лет',simLabelRate:'📊 Годовая доходность (%)',btnSimulate:'🚀 Рассчитать!',
 simInvested:'Всего вложишь',simWorth:'Будет стоить',simInterest:'Проценты',simReturnLabel:'Общая доходность',
-simEarnDay:'Будешь зарабатывать в день',simEarnMonth:'Будешь зарабатывать в месяц',
+simEarnDay:'Будешь зарабатывать в день',simEarnMonth:'Будешь зарабатывать в месяц',simEarnYear:'Будешь зарабатывать в год',
 simChartPre:'Твои деньги через',simChartPost:'лет',
 simEDMachine:'🤑 Машина для денег!',simEDSleep:'💪 Даже во сне!',simEDGrow:'🌱 Растёт потихоньку...',
 simEMSalary:'🏆 Настоящий пассивный доход!',simEMFire:'🔥 Неплохо!',simEMGood:'📈 Хорошо растёт!',simEMKeep:'🌱 Продолжай!',
@@ -632,7 +639,7 @@ today:'сегодня',yesterday:'вчера',daysAgo:'{n} дн. назад',mon
 ar:{title:'محفظتي',tagline:'!شاهد أموالك تنمو',lockHint:'أدخل رمز الدخول',lockError:'!رمز خاطئ',connecting:'...جاري الاتصال',
 tabInvest:'💰 استثمارات',tabPatrimoine:'🏠 الممتلكات',
 statsTitle:'كيف حال محفظتك',statsInvested:'استثمرت',statsWorth:'القيمة الحالية',statsGained:'ربحت',statsReturn:'العائد',
-earnDay:'تربح يومياً',earnMonth:'تربح شهرياً',
+earnDay:'تربح يومياً',earnMonth:'تربح شهرياً',earnYear:'تربح سنوياً',
 earnDaySleep:'!💪 حتى أثناء النوم',earnDayGrow:'...🌱 ينمو ببطء',
 earnMonthFire:'!🔥 ليس سيئاً',earnMonthGood:'!📈 يرتفع بشكل جيد',earnMonthKeep:'!🌱 استمر',
 pendingTitle:'في انتظار التأكيد',pendingHint:'يجب على هوغو تأكيد هذه العمليات برمزه السري.',
@@ -646,7 +653,7 @@ emptyInvest:'!لا توجد استثمارات بعد.<br>أضف أول استث
 simTitle:'ماذا لو استثمرت لفترة طويلة؟',simTagline:'اكتشف كم يمكن أن تصبح أموالك مع الاستثمار المنتظم',
 simParams:'اختر الإعدادات',simLabelInit:'💰 المبلغ الأولي (€)',simLabelMonthly:'📅 تضيف شهرياً (€)',simLabelYears:'⏰ كم سنة',simLabelRate:'📊 العائد السنوي (%)',btnSimulate:'🚀 !حساب',
 simInvested:'إجمالي الاستثمار',simWorth:'ستصبح قيمتها',simInterest:'الفوائد المكتسبة',simReturnLabel:'العائد الإجمالي',
-simEarnDay:'ستربح يومياً',simEarnMonth:'ستربح شهرياً',
+simEarnDay:'ستربح يومياً',simEarnMonth:'ستربح شهرياً',simEarnYear:'ستربح سنوياً',
 simChartPre:'أموالك خلال',simChartPost:'سنوات',
 simEDMachine:'!🤑 آلة أموال',simEDSleep:'!💪 حتى أثناء النوم',simEDGrow:'...🌱 ينمو ببطء',
 simEMSalary:'!🏆 دخل سلبي حقيقي',simEMFire:'!🔥 ليس سيئاً',simEMGood:'!📈 يرتفع بشكل جيد',simEMKeep:'!🌱 استمر',
@@ -672,7 +679,7 @@ today:'اليوم',yesterday:'أمس',daysAgo:'منذ {n} يوم',monthsAgo:'م�
 ja:{title:'マイポートフォリオ',tagline:'お金が増えるのを見よう！',lockHint:'アクセスコードを入力',lockError:'コードが違います！',connecting:'接続中...',
 tabInvest:'💰 投資',tabPatrimoine:'🏠 資産',
 statsTitle:'ポートフォリオの状況',statsInvested:'投資額',statsWorth:'現在の価値',statsGained:'利益',statsReturn:'リターン',
-earnDay:'1日の収益',earnMonth:'1ヶ月の収益',
+earnDay:'1日の収益',earnMonth:'1ヶ月の収益',earnYear:'1年の収益',
 earnDaySleep:'💪 寝ている間も！',earnDayGrow:'🌱 少しずつ成長中...',
 earnMonthFire:'🔥 なかなか良い！',earnMonthGood:'📈 順調に上昇中！',earnMonthKeep:'🌱 この調子で！',
 pendingTitle:'承認待ち',pendingHint:'ヒューゴが秘密コードでこれらの操作を承認する必要があります。',
@@ -686,7 +693,7 @@ emptyInvest:'まだ投資がありません。<br>上から最初の投資を追
 simTitle:'長期投資したらどうなる？',simTagline:'定期的に投資すればお金がどれだけ増えるか見てみよう',
 simParams:'パラメータを選択',simLabelInit:'💰 初期投資額 (€)',simLabelMonthly:'📅 毎月の積立額 (€)',simLabelYears:'⏰ 何年間',simLabelRate:'📊 年間リターン (%)',btnSimulate:'🚀 シミュレーション！',
 simInvested:'投資総額',simWorth:'将来の価値',simInterest:'利益',simReturnLabel:'総リターン',
-simEarnDay:'1日の予想収益',simEarnMonth:'1ヶ月の予想収益',
+simEarnDay:'1日の予想収益',simEarnMonth:'1ヶ月の予想収益',simEarnYear:'1年の予想収益',
 simChartPre:'',simChartPost:'年後のお金',
 simEDMachine:'🤑 お金製造機！',simEDSleep:'💪 寝ている間も！',simEDGrow:'🌱 少しずつ成長中...',
 simEMSalary:'🏆 本物の不労所得！',simEMFire:'🔥 なかなか良い！',simEMGood:'📈 順調に上昇中！',simEMKeep:'🌱 この調子で！',
@@ -712,7 +719,7 @@ today:'今日',yesterday:'昨日',daysAgo:'{n}日前',monthsAgo:'{n}ヶ月前',y
 th:{title:'พอร์ตการลงทุน',tagline:'ดูเงินของคุณเติบโต!',lockHint:'ใส่รหัสเข้าใช้งาน',lockError:'รหัสผิด!',connecting:'กำลังเชื่อมต่อ...',
 tabInvest:'💰 การลงทุน',tabPatrimoine:'🏠 ทรัพย์สิน',
 statsTitle:'พอร์ตของคุณเป็นอย่างไร',statsInvested:'ลงทุนไป',statsWorth:'มูลค่าปัจจุบัน',statsGained:'กำไร',statsReturn:'ผลตอบแทน',
-earnDay:'รายได้ต่อวัน',earnMonth:'รายได้ต่อเดือน',
+earnDay:'รายได้ต่อวัน',earnMonth:'รายได้ต่อเดือน',earnYear:'รายได้ต่อปี',
 earnDaySleep:'💪 แม้ตอนนอนหลับ!',earnDayGrow:'🌱 เติบโตช้าๆ...',
 earnMonthFire:'🔥 ไม่เลวเลย!',earnMonthGood:'📈 ขึ้นดี!',earnMonthKeep:'🌱 ทำต่อไป!',
 pendingTitle:'รอการอนุมัติ',pendingHint:'ฮิวโก้ต้องยืนยันรายการเหล่านี้ด้วยรหัสลับก่อน',
@@ -726,7 +733,7 @@ emptyInvest:'ยังไม่มีการลงทุน<br>เพิ่ม
 simTitle:'ถ้าลงทุนระยะยาวล่ะ?',simTagline:'ดูว่าเงินจะเติบโตแค่ไหนถ้าลงทุนสม่ำเสมอ',
 simParams:'เลือกการตั้งค่า',simLabelInit:'💰 เงินลงทุนเริ่มต้น (€)',simLabelMonthly:'📅 เพิ่มทุกเดือน (€)',simLabelYears:'⏰ กี่ปี',simLabelRate:'📊 ผลตอบแทนต่อปี (%)',btnSimulate:'🚀 จำลอง!',
 simInvested:'ลงทุนรวม',simWorth:'จะมีมูลค่า',simInterest:'ดอกเบี้ย',simReturnLabel:'ผลตอบแทนรวม',
-simEarnDay:'จะได้ต่อวัน',simEarnMonth:'จะได้ต่อเดือน',
+simEarnDay:'จะได้ต่อวัน',simEarnMonth:'จะได้ต่อเดือน',simEarnYear:'จะได้ต่อปี',
 simChartPre:'เงินของคุณใน',simChartPost:'ปี',
 simEDMachine:'🤑 เครื่องพิมพ์เงิน!',simEDSleep:'💪 แม้ตอนนอนหลับ!',simEDGrow:'🌱 เติบโตช้าๆ...',
 simEMSalary:'🏆 รายได้แบบไม่ต้องทำงาน!',simEMFire:'🔥 ไม่เลวเลย!',simEMGood:'📈 ขึ้นดี!',simEMKeep:'🌱 ทำต่อไป!',
@@ -761,11 +768,10 @@ function applyLang(){
 }
 function setLang(lang){
   currentLang=lang;localStorage.setItem('lang',lang);
-  document.getElementById('langSelect').value=lang;
   applyLang();
 }
 (function(){const s=localStorage.getItem('lang');if(s&&T[s]){currentLang=s;}})();
-document.addEventListener('DOMContentLoaded',()=>{document.getElementById('langSelect').value=currentLang;if(currentLang!=='fr')applyLang();});
+document.addEventListener('DOMContentLoaded',()=>{if(currentLang!=='fr')applyLang();initOtp();initSettingsOtp();});
 
 // --- THEME ---
 function toggleTheme(){
@@ -817,36 +823,62 @@ function togglePw(btn){
 
 // --- SETTINGS MODAL ---
 let lockEnabled=true; // default, overridden by Firebase
+function initSettingsOtp(){
+  const digits=document.querySelectorAll('.settings-otp');
+  digits.forEach((d,i)=>{
+    d.addEventListener('input',e=>{
+      d.value=d.value.replace(/\D/g,'').slice(0,1);
+      d.classList.toggle('filled',d.value!=='');
+      d.classList.remove('error');
+      if(d.value&&i<3)digits[i+1].focus();
+      if(i===3&&d.value)checkSettingsPin();
+    });
+    d.addEventListener('keydown',e=>{
+      if(e.key==='Backspace'&&!d.value&&i>0){digits[i-1].focus();digits[i-1].value='';digits[i-1].classList.remove('filled');}
+      if(e.key==='Enter')checkSettingsPin();
+    });
+    d.addEventListener('paste',e=>{
+      e.preventDefault();
+      const paste=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,4);
+      paste.split('').forEach((c,j)=>{if(digits[j]){digits[j].value=c;digits[j].classList.add('filled');}});
+      if(paste.length>=4)checkSettingsPin();else if(digits[paste.length])digits[paste.length].focus();
+    });
+  });
+}
+function getSettingsOtpValue(){return Array.from(document.querySelectorAll('.settings-otp')).map(d=>d.value).join('');}
+function clearSettingsOtp(){document.querySelectorAll('.settings-otp').forEach(d=>{d.value='';d.classList.remove('filled','error');});}
+function shakeSettingsOtp(){document.querySelectorAll('.settings-otp').forEach(d=>d.classList.add('error'));}
+function checkSettingsPin(){
+  const v=getSettingsOtpValue();
+  const err=document.getElementById('settingsError1');
+  err.textContent='';
+  if(v.length<4)return;
+  if(v===getPin()){
+    document.getElementById('settingsStep1').style.display='none';
+    document.getElementById('settingsStep2').style.display='';
+    document.getElementById('settingsError2').textContent='';
+    document.getElementById('settingsNewAccessCode').value='';
+    document.getElementById('settingsNewPin').value='';
+    document.getElementById('settingsLockToggle').checked=lockEnabled;
+    toggleLockPreview();
+  } else {
+    err.textContent=t('lockError');
+    shakeSettingsOtp();
+    setTimeout(()=>{clearSettingsOtp();document.querySelectorAll('.settings-otp')[0].focus();},500);
+  }
+}
 function openSettingsModal(){
   document.getElementById('settingsError1').textContent='';
-  document.getElementById('settingsAdminPin').value='';
+  clearSettingsOtp();
   document.getElementById('settingsStep1').style.display='';
   document.getElementById('settingsStep2').style.display='none';
   document.getElementById('settingsModal').classList.add('active');
-  setTimeout(()=>document.getElementById('settingsAdminPin').focus(),100);
+  setTimeout(()=>document.querySelectorAll('.settings-otp')[0].focus(),100);
 }
 function closeSettings(){
   document.getElementById('settingsModal').classList.remove('active');
+  clearSettingsOtp();
 }
-document.getElementById('settingsAdminPin').addEventListener('input',function(){
-  const v=this.value.trim();
-  const err=document.getElementById('settingsError1');
-  err.textContent='';
-  if(v.length>=4){
-    if(v===getPin()){
-      document.getElementById('settingsStep1').style.display='none';
-      document.getElementById('settingsStep2').style.display='';
-      document.getElementById('settingsError2').textContent='';
-      document.getElementById('settingsNewAccessCode').value='';
-      document.getElementById('settingsNewPin').value='';
-      document.getElementById('settingsLockToggle').checked=lockEnabled;
-      toggleLockPreview();
-    } else {
-      err.textContent=t('lockError');
-      this.value=''; this.focus();
-    }
-  }
-});
 function toggleLockPreview(){
   const on=document.getElementById('settingsLockToggle').checked;
   document.getElementById('settingsLockFields').style.display=on?'':'none';
@@ -954,18 +986,44 @@ function setupPinSubmit() {
   if(pin!==confirm2){err.textContent=t('alertPinNoMatch');return;}
   setPin(pin); document.getElementById('setupModal').classList.remove('active');
 }
+function initOtp(){
+  const digits=document.querySelectorAll('.otp-digit');
+  digits.forEach((d,i)=>{
+    d.addEventListener('input',e=>{
+      d.value=d.value.replace(/\D/g,'').slice(0,1);
+      d.classList.toggle('filled',d.value!=='');
+      d.classList.remove('error');
+      if(d.value&&i<3)digits[i+1].focus();
+      if(i===3&&d.value)submitPin();
+    });
+    d.addEventListener('keydown',e=>{
+      if(e.key==='Backspace'&&!d.value&&i>0){digits[i-1].focus();digits[i-1].value='';digits[i-1].classList.remove('filled');}
+      if(e.key==='Enter')submitPin();
+    });
+    d.addEventListener('paste',e=>{
+      e.preventDefault();
+      const paste=(e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,4);
+      paste.split('').forEach((c,j)=>{if(digits[j]){digits[j].value=c;digits[j].classList.add('filled');}});
+      if(paste.length>=4)submitPin();else if(digits[paste.length])digits[paste.length].focus();
+    });
+  });
+}
+function getOtpValue(){return Array.from(document.querySelectorAll('.otp-digit')).map(d=>d.value).join('');}
+function clearOtp(){document.querySelectorAll('.otp-digit').forEach(d=>{d.value='';d.classList.remove('filled','error');});}
+function shakeOtp(){document.querySelectorAll('.otp-digit').forEach(d=>d.classList.add('error'));}
 function askPin(action, data) {
-  pendingAction={action,data}; document.getElementById('pinError').textContent=''; document.getElementById('pinInput').value='';
+  pendingAction={action,data}; document.getElementById('pinError').textContent=''; clearOtp();
   document.getElementById('pinModal').classList.add('active');
-  setTimeout(()=>document.getElementById('pinInput').focus(),100);
+  setTimeout(()=>document.querySelectorAll('.otp-digit')[0].focus(),100);
   const titles={approve:'✅ Valider',reject:'❌ Rejeter',delete:'🗑 Supprimer',clearAll:'🗑 Tout effacer',changePin:'🔑 Changer le code',deleteAsset:'🗑 Supprimer le bien'};
   document.getElementById('pinTitle').textContent=titles[action]||'Validation';
   document.getElementById('pinSubtitle').textContent=t('pinHint');
 }
-function closePin() { document.getElementById('pinModal').classList.remove('active'); pendingAction=null; }
+function closePin() { document.getElementById('pinModal').classList.remove('active'); pendingAction=null; clearOtp(); }
 function submitPin() {
-  const pin=document.getElementById('pinInput').value.trim();
-  if(pin!==getPin()){document.getElementById('pinError').textContent=t('pinBadCode');document.getElementById('pinInput').value='';document.getElementById('pinInput').focus();return;}
+  const pin=getOtpValue();
+  if(pin.length<4)return;
+  if(pin!==getPin()){document.getElementById('pinError').textContent=t('pinBadCode');shakeOtp();setTimeout(()=>{clearOtp();document.querySelectorAll('.otp-digit')[0].focus();},500);return;}
   const saved=pendingAction; closePin(); if(!saved)return;
   const{action,data}=saved;
   switch(action){
@@ -1112,11 +1170,15 @@ function updateStats(){
   const monthlyGain=currentValue*(Math.pow(1+DAILY_RATE,30)-1);
   const perDayEl=document.getElementById('earningsPerDay');
   const perMonthEl=document.getElementById('earningsPerMonth');
+  const yearlyGain=currentValue*(Math.pow(1+DAILY_RATE,365)-1);
+  const perYearEl=document.getElementById('earningsPerYear');
   perDayEl.textContent='+'+fmt(dailyGain);
   perMonthEl.textContent='+'+fmt(monthlyGain);
+  perYearEl.textContent='+'+fmt(yearlyGain);
   // Petite phrase fun en dessous
   const daySubEl=document.getElementById('earningsPerDaySub');
   const monthSubEl=document.getElementById('earningsPerMonthSub');
+  const yearSubEl=document.getElementById('earningsPerYearSub');
   if(dailyGain>=1) daySubEl.textContent=t('earnDaySleep');
   else if(dailyGain>0) daySubEl.textContent=t('earnDayGrow');
   else daySubEl.textContent='';
@@ -1124,6 +1186,10 @@ function updateStats(){
   else if(monthlyGain>=10) monthSubEl.textContent=t('earnMonthGood');
   else if(monthlyGain>0) monthSubEl.textContent=t('earnMonthKeep');
   else monthSubEl.textContent='';
+  if(yearlyGain>=1000) yearSubEl.textContent='🤑 Ça commence à peser !';
+  else if(yearlyGain>=100) yearSubEl.textContent='💪 Belle performance !';
+  else if(yearlyGain>0) yearSubEl.textContent='🌱 Ça pousse bien !';
+  else yearSubEl.textContent='';
   // Animation si gains > 0
   document.querySelectorAll('.earnings-card').forEach(c=>{
     if(currentValue>0) c.classList.add('active'); else c.classList.remove('active');
@@ -1176,7 +1242,7 @@ function renderChart(){
     {label:t('chartLabelValue'),data:valueData,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
     {label:t('chartLabelInvested'),data:investedData,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
   ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
-    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y),afterBody:items=>{if(!items.length)return'';const val=items[0].parsed.y,inv=items[1]?items[1].parsed.y:0,gain=val-inv;const sign=gain>=0?'+':'';return'💰 Gains : '+sign+fmt(gain);}}}},
     scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:10,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
 }
 
@@ -1293,9 +1359,11 @@ function runSim(){
   const simDailyRate=Math.pow(1+annualRate,1/365)-1;
   const simDailyGain=balance*simDailyRate;
   const simMonthlyGain=balance*(Math.pow(1+simDailyRate,30)-1);
+  const simYearlyGain=balance*(Math.pow(1+simDailyRate,365)-1);
   document.getElementById('simEarningsPerDay').textContent='+'+fmt(simDailyGain);
   document.getElementById('simEarningsPerMonth').textContent='+'+fmt(simMonthlyGain);
-  const sdSub=document.getElementById('simEarningsPerDaySub'),smSub=document.getElementById('simEarningsPerMonthSub');
+  document.getElementById('simEarningsPerYear').textContent='+'+fmt(simYearlyGain);
+  const sdSub=document.getElementById('simEarningsPerDaySub'),smSub=document.getElementById('simEarningsPerMonthSub'),sySub=document.getElementById('simEarningsPerYearSub');
   if(simDailyGain>=10)sdSub.textContent=t('simEDMachine');
   else if(simDailyGain>=1)sdSub.textContent=t('simEDSleep');
   else if(simDailyGain>0)sdSub.textContent=t('simEDGrow');
@@ -1305,6 +1373,11 @@ function runSim(){
   else if(simMonthlyGain>=10)smSub.textContent=t('simEMGood');
   else if(simMonthlyGain>0)smSub.textContent=t('simEMKeep');
   else smSub.textContent='';
+  if(simYearlyGain>=10000)sySub.textContent='🤑 Machine à billets !';
+  else if(simYearlyGain>=1000)sySub.textContent='💰 Ça commence à peser !';
+  else if(simYearlyGain>=100)sySub.textContent='💪 Belle performance !';
+  else if(simYearlyGain>0)sySub.textContent='🌱 Ça pousse bien !';
+  else sySub.textContent='';
   document.querySelectorAll('#simEarningsRow .earnings-card').forEach(c=>{c.classList.remove('active');if(balance>0)setTimeout(()=>c.classList.add('active'),100);});
   const step2=Math.max(1,Math.floor(totalMonths/60));const fL=[],fV=[],fI=[];
   for(let i=0;i<labels.length;i++){if(i===0||i===labels.length-1||i%step2===0){fL.push(labels[i]);fV.push(valueData[i]);fI.push(investedData[i]);}}
@@ -1314,7 +1387,7 @@ function runSim(){
     {label:t('chartLabelValue'),data:fV,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
     {label:t('chartLabelInvested'),data:fI,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
   ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
-    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+    plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y),afterBody:items=>{if(!items.length)return'';const val=items[0].parsed.y,inv=items[1]?items[1].parsed.y:0,gain=val-inv;const sign=gain>=0?'+':'';return'💰 Gains : '+sign+fmt(gain);}}}},
     scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:12,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
 }
 
