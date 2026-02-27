@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Portefeuille</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<style>
+  :root {
+    --bg: #0f1117; --card: #1a1d2e; --border: #2a2d3e;
+    --accent: #6c5ce7; --accent2: #00cec9; --green: #00b894;
+    --red: #ff7675; --text: #dfe6e9; --text2: #a0a4b8;
+    --gold: #fdcb6e; --orange: #e17055; --yellow: #ffeaa7;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:16px; }
+  .container { max-width:960px; margin:0 auto; }
+  .app-header { text-align:center; margin-bottom:28px; }
+  .app-header .logo { font-size:2.6rem; margin-bottom:2px; }
+  .app-header h1 { font-size:1.6rem; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:4px; }
+  .app-header .tagline { color:var(--text2); font-size:.88rem; }
+  .section-title { display:flex; align-items:center; gap:10px; font-size:1.15rem; font-weight:700; margin-bottom:14px; }
+  .section-title .icon { font-size:1.4rem; }
+  .stats { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:24px; }
+  @media(min-width:600px){ .stats { grid-template-columns:repeat(4,1fr); } }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px 12px; text-align:center; }
+  .stat-card .emoji { font-size:1.6rem; margin-bottom:4px; }
+  .stat-card .label { font-size:.75rem; color:var(--text2); margin-bottom:4px; }
+  .stat-card .value { font-size:1.25rem; font-weight:700; }
+  .stat-card .value.green { color:var(--green); }
+  .stat-card .value.accent { color:var(--accent); }
+  .stat-card .value.gold { color:var(--gold); }
+  .stat-card .value.accent2 { color:var(--accent2); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; }
+  .card.pending { border-color:rgba(255,234,167,.3); }
+  .card.pending .section-title { color:var(--yellow); }
+  .pending-count { display:inline-flex; align-items:center; justify-content:center; background:var(--yellow); color:var(--bg); font-size:.75rem; font-weight:700; width:22px; height:22px; border-radius:50%; }
+  .form-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+  .form-group { display:flex; flex-direction:column; flex:1; min-width:130px; }
+  .form-group label { font-size:.82rem; color:var(--text2); margin-bottom:5px; display:flex; align-items:center; gap:5px; }
+  .form-group input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:12px 14px; border-radius:10px; font-size:1rem; outline:none; transition:border-color .2s; }
+  .form-group input:focus { border-color:var(--accent); }
+  .form-hint { font-size:.82rem; color:var(--text2); margin-bottom:14px; line-height:1.5; }
+  .btn { border:none; padding:12px 24px; border-radius:10px; font-size:1rem; cursor:pointer; font-weight:600; transition:transform .1s,opacity .15s; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; }
+  .btn:hover { opacity:.92; }
+  .btn:active { transform:scale(.97); }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),#7c6cf0); color:#fff; }
+  .btn-green { background:linear-gradient(135deg,var(--green),#55efc4); color:#fff; }
+  .btn-red { background:linear-gradient(135deg,var(--red),var(--orange)); color:#fff; }
+  .btn-sm { padding:8px 16px; font-size:.88rem; border-radius:8px; }
+  .btn-ghost { background:var(--border); color:var(--text2); padding:7px 14px; border-radius:8px; font-size:.8rem; border:none; cursor:pointer; transition:background .2s; }
+  .btn-ghost:hover { background:#3a3d5e; color:var(--text); }
+  .btn-ghost.danger { color:var(--red); }
+  .btn-ghost.danger:hover { background:rgba(255,118,117,.15); }
+  .btn-delete { background:rgba(255,118,117,.15); color:var(--red); border:none; padding:6px 12px; border-radius:8px; font-size:.85rem; cursor:pointer; }
+  .btn-delete:hover { background:rgba(255,118,117,.25); }
+  .btn-pm { background:var(--card); border:1px solid var(--border); color:var(--accent); width:40px; height:42px; border-radius:10px; font-size:1.3rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:border-color .2s,background .2s; }
+  .btn-pm:hover { border-color:var(--accent); background:rgba(108,92,231,.15); }
+  .chart-wrapper { position:relative; height:280px; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:.72rem; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; padding:10px; border-bottom:1px solid var(--border); }
+  td { padding:10px; border-bottom:1px solid var(--border); font-size:.9rem; }
+  tr:last-child td { border-bottom:none; }
+  .plus-value { color:var(--green); font-weight:600; }
+  .retrait-value { color:var(--orange); font-weight:600; }
+  .type-badge { display:inline-block; padding:3px 10px; border-radius:6px; font-size:.78rem; font-weight:600; }
+  .type-invest { background:rgba(108,92,231,.2); color:var(--accent); }
+  .type-retrait { background:rgba(225,112,85,.2); color:var(--orange); }
+  .duration-info { color:var(--text2); font-size:.8rem; }
+  .empty-state { text-align:center; color:var(--text2); padding:40px 20px; font-size:.95rem; }
+  .empty-state .empty-icon { font-size:2.5rem; margin-bottom:10px; }
+  .admin-bar { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .admin-bar-right { display:flex; gap:8px; flex-wrap:wrap; }
+  .sep { border:none; border-top:2px solid var(--border); margin:36px 0 28px; }
+  .footer { text-align:center; color:var(--text2); font-size:.75rem; margin-top:24px; padding:12px; border-top:1px solid var(--border); }
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.75); z-index:100; justify-content:center; align-items:center; }
+  .modal-overlay.active { display:flex; }
+  .modal { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:32px; width:90%; max-width:400px; text-align:center; }
+  .modal .modal-icon { font-size:2.5rem; margin-bottom:8px; }
+  .modal h3 { margin-bottom:6px; font-size:1.2rem; }
+  .modal p { color:var(--text2); font-size:.9rem; margin-bottom:20px; line-height:1.4; }
+  .modal input { background:var(--bg); border:1px solid var(--border); color:var(--text); padding:14px 16px; border-radius:10px; font-size:1.4rem; text-align:center; letter-spacing:10px; width:100%; outline:none; margin-bottom:16px; }
+  .modal input:focus { border-color:var(--accent); }
+  .modal-btns { display:flex; gap:10px; justify-content:center; }
+  .modal-btns .btn { flex:1; }
+  .modal-error { color:var(--red); font-size:.85rem; margin-bottom:10px; min-height:20px; }
+
+  /* Loading overlay */
+  .loading-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+  .loading-overlay.hidden { display:none; }
+  .loading-spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent2); border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .loading-text { color:var(--text2); font-size:.95rem; }
+
+  /* Connection status */
+  .conn-status { position:fixed; top:10px; right:10px; padding:5px 12px; border-radius:20px; font-size:.72rem; font-weight:600; z-index:50; }
+  .conn-status.online { background:rgba(0,184,148,.2); color:var(--green); }
+  .conn-status.offline { background:rgba(255,118,117,.2); color:var(--red); }
+
+  @media(max-width:500px){
+    .form-row { flex-direction:column; }
+    .form-group { min-width:100%; }
+    .btn { width:100%; justify-content:center; }
+    .admin-bar { flex-direction:column; align-items:stretch; }
+    .admin-bar-right { justify-content:center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div style="font-size:3rem;">📈</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Connexion en cours...</div>
+</div>
+
+<!-- Connection status -->
+<div class="conn-status online" id="connStatus">En ligne</div>
+
+<div class="container">
+  <div class="app-header">
+    <div class="logo">📈</div>
+    <h1>Mon Portefeuille</h1>
+    <div class="tagline">Regarde ton argent grandir !</div>
+  </div>
+
+  <div class="section-title"><span class="icon">💰</span> Comment va ton portefeuille</div>
+  <div class="stats">
+    <div class="stat-card"><div class="emoji">🏦</div><div class="label">Tu as investi</div><div class="value accent" id="totalInvested">0,00 €</div></div>
+    <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaut maintenant</div><div class="value accent2" id="currentValue">0,00 €</div></div>
+    <div class="stat-card"><div class="emoji">🎉</div><div class="label">Tu as gagné</div><div class="value green" id="totalGain">+0,00 €</div></div>
+    <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement</div><div class="value gold" id="totalReturn">0,00%</div></div>
+  </div>
+
+  <div class="card pending" id="pendingSection" style="display:none;">
+    <div class="section-title"><span class="icon">⏳</span> En attente de validation <span class="pending-count" id="pendingCount">0</span></div>
+    <p class="form-hint">Hugo doit valider ces opérations avec son code secret avant qu'elles comptent.</p>
+    <div id="pendingContainer"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon">➕</span> Investir de l'argent</div>
+    <p class="form-hint">Tu veux investir ? Choisis la date et le montant, puis clique sur le bouton. Hugo devra valider ensuite.</p>
+    <div class="form-row">
+      <input type="hidden" id="type" value="invest">
+      <div class="form-group"><label>📅 Date</label><input type="date" id="date"></div>
+      <div class="form-group"><label>💶 Combien tu investis (€)</label><input type="number" id="amount" placeholder="Ex: 50" min="0" step="0.01"></div>
+      <button class="btn btn-primary" onclick="addOperation()">🚀 Investir !</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon">📈</span> L'évolution de ton argent</div>
+    <p class="form-hint" style="margin-bottom:10px;">La courbe en bleu c'est ce que ton argent vaut vraiment. La ligne violette c'est ce que tu as mis au total.</p>
+    <div class="chart-wrapper"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="admin-bar">
+    <div><button class="btn-ghost danger" onclick="askPin('clearAll')">🗑 Tout effacer</button></div>
+    <div class="admin-bar-right">
+      <button class="btn-ghost" onclick="askPin('changePin')">🔑 Changer code</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon">📋</span> Tes investissements</div>
+    <div id="tableContainer"></div>
+  </div>
+
+  <hr class="sep">
+
+  <div class="app-header" style="margin-bottom:20px;">
+    <div class="logo">🔮</div>
+    <h1 style="font-size:1.35rem;">Et si j'investissais pendant longtemps ?</h1>
+    <div class="tagline">Découvre combien ton argent peut devenir en investissant régulièrement</div>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span class="icon">🎮</span> Choisis tes paramètres</div>
+    <div class="form-row">
+      <div class="form-group"><label>💰 Investissement de départ (€)</label><input type="number" id="simInit" placeholder="Ex: 1000" min="0" step="1" value="1000"></div>
+      <div class="form-group"><label>📅 Chaque mois tu rajoutes (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="100"></div>
+      <div class="form-group"><label>⏰ Pendant combien d'années</label><input type="number" id="simYears" placeholder="Ex: 10" min="1" max="50" step="1" value="10"></div>
+      <div class="form-group">
+        <label>📊 Rendement par an (%)</label>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button class="btn-pm" onclick="adjRate(-1)">−</button>
+          <input type="number" id="simRate" min="0" max="50" step="0.5" value="8" style="text-align:center;flex:1;">
+          <button class="btn-pm" onclick="adjRate(1)">+</button>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="runSim()">🚀 Simuler !</button>
+    </div>
+  </div>
+
+  <div class="stats" id="simStats" style="display:none;">
+    <div class="stat-card"><div class="emoji">🏦</div><div class="label">Tu auras investi au total</div><div class="value accent" id="simTotalInvested">-</div></div>
+    <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaudra</div><div class="value accent2" id="simFinalValue">-</div></div>
+    <div class="stat-card"><div class="emoji">🎉</div><div class="label">Intérêts gagnés</div><div class="value green" id="simInterest">-</div></div>
+    <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement total</div><div class="value gold" id="simReturn">-</div></div>
+  </div>
+
+  <div class="card" id="simChartCard" style="display:none;">
+    <div class="section-title"><span class="icon">📈</span> Ton argent dans <span id="simChartTitle">10</span> ans</div>
+    <div class="chart-wrapper"><canvas id="simChart"></canvas></div>
+  </div>
+
+  <div class="footer">Ton argent grossit de 8% par an grâce aux intérêts composés 🧠</div>
+</div>
+
+<!-- PIN Modal -->
+<div class="modal-overlay" id="pinModal">
+  <div class="modal">
+    <div class="modal-icon">🔒</div>
+    <h3 id="pinTitle">Code secret</h3>
+    <p id="pinSubtitle">Tape le code secret de Hugo</p>
+    <div class="modal-error" id="pinError"></div>
+    <input type="password" id="pinInput" maxlength="6" placeholder="••••" inputmode="numeric" autocomplete="off">
+    <div class="modal-btns">
+      <button class="btn btn-red btn-sm" onclick="closePin()">Annuler</button>
+      <button class="btn btn-green btn-sm" onclick="submitPin()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Setup PIN Modal -->
+<div class="modal-overlay" id="setupModal">
+  <div class="modal">
+    <div class="modal-icon">🔑</div>
+    <h3>Bienvenue !</h3>
+    <p>Hugo, choisis un code secret (4 à 6 chiffres). Tu en auras besoin pour valider les investissements.</p>
+    <div class="modal-error" id="setupError"></div>
+    <input type="password" id="setupPin" maxlength="6" placeholder="Ton code" inputmode="numeric" autocomplete="off">
+    <div style="height:10px;"></div>
+    <input type="password" id="setupPinConfirm" maxlength="6" placeholder="Répète le code" inputmode="numeric" autocomplete="off">
+    <div style="height:16px;"></div>
+    <button class="btn btn-primary" onclick="setupPinSubmit()" style="width:100%;">✅ C'est parti !</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  ⚠️  CONFIGURATION FIREBASE - À REMPLACER  ⚠️
+// ══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAmfQjTfM--hU7rQ2D4rlq0otV3zCZLHxE",
+  authDomain: "portefeuille-d330f.firebaseapp.com",
+  databaseURL: "https://portefeuille-d330f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "portefeuille-d330f",
+  storageBucket: "portefeuille-d330f.firebasestorage.app",
+  messagingSenderId: "1080692026103",
+  appId: "1:1080692026103:web:dcbc459c6c1c61a81181f2"
+};
+// ══════════════════════════════════════════════
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const ANNUAL_RATE = 0.08;
+const DAILY_RATE = Math.pow(1 + ANNUAL_RATE, 1/365) - 1;
+
+let operations = [];
+let cachedPin = null;
+let pendingAction = null;
+let dataReady = false;
+let pinReady = false;
+
+// --- CONNECTION STATUS ---
+db.ref('.info/connected').on('value', snap => {
+  const el = document.getElementById('connStatus');
+  if (snap.val() === true) {
+    el.textContent = 'En ligne';
+    el.className = 'conn-status online';
+  } else {
+    el.textContent = 'Hors ligne';
+    el.className = 'conn-status offline';
+  }
+});
+
+// --- FIREBASE LISTENERS ---
+db.ref('pin').on('value', snap => {
+  cachedPin = snap.val();
+  pinReady = true;
+  if (dataReady) initApp();
+});
+
+db.ref('operations').on('value', snap => {
+  const data = snap.val();
+  operations = data ? Object.values(data) : [];
+  operations.sort((a,b) => new Date(a.date) - new Date(b.date));
+  dataReady = true;
+  if (pinReady) initApp();
+  else render();
+});
+
+let appInitialized = false;
+function initApp() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  if (!appInitialized) {
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    appInitialized = true;
+    checkFirstRun();
+  }
+  render();
+}
+
+// Timeout: if Firebase takes too long, show app anyway
+setTimeout(() => {
+  if (!appInitialized) {
+    document.getElementById('loadingOverlay').classList.add('hidden');
+    document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    appInitialized = true;
+    render();
+    checkFirstRun();
+  }
+}, 5000);
+
+// --- PIN ---
+function getPin() { return cachedPin; }
+function setPin(pin) { cachedPin = pin; db.ref('pin').set(pin); }
+
+function checkFirstRun() {
+  if (!getPin()) {
+    document.getElementById('setupModal').classList.add('active');
+  }
+}
+
+function setupPinSubmit() {
+  const pin = document.getElementById('setupPin').value.trim();
+  const confirm = document.getElementById('setupPinConfirm').value.trim();
+  const err = document.getElementById('setupError');
+  if (!/^\d{4,6}$/.test(pin)) { err.textContent = 'Le code doit contenir 4 à 6 chiffres.'; return; }
+  if (pin !== confirm) { err.textContent = 'Les deux codes ne sont pas identiques !'; return; }
+  setPin(pin);
+  document.getElementById('setupModal').classList.remove('active');
+}
+
+function askPin(action, data) {
+  pendingAction = { action, data };
+  document.getElementById('pinError').textContent = '';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinModal').classList.add('active');
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+  const titles = {
+    approve: '✅ Valider', reject: '❌ Rejeter', delete: '🗑 Supprimer',
+    clearAll: '🗑 Tout effacer', changePin: '🔑 Changer le code'
+  };
+  document.getElementById('pinTitle').textContent = titles[action] || 'Validation';
+  document.getElementById('pinSubtitle').textContent = 'Tape le code secret de Hugo';
+}
+
+function closePin() {
+  document.getElementById('pinModal').classList.remove('active');
+  pendingAction = null;
+}
+
+function submitPin() {
+  const pin = document.getElementById('pinInput').value.trim();
+  if (pin !== getPin()) {
+    document.getElementById('pinError').textContent = 'Mauvais code ! Réessaye.';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+    return;
+  }
+  const saved = pendingAction;
+  closePin();
+  if (!saved) return;
+  const { action, data } = saved;
+  switch(action) {
+    case 'approve': approveOp(data); break;
+    case 'reject': rejectOp(data); break;
+    case 'delete': deleteOp(data); break;
+    case 'clearAll': clearAllConfirmed(); break;
+    case 'changePin':
+      document.getElementById('setupModal').classList.add('active');
+      break;
+  }
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('pinModal').classList.contains('active')) submitPin();
+    if (document.getElementById('setupModal').classList.contains('active')) setupPinSubmit();
+  }
+});
+
+// --- DATA ---
+function saveData() {
+  const obj = {};
+  for (const op of operations) obj[op.id] = op;
+  db.ref('operations').set(obj);
+}
+
+function getApproved() { return operations.filter(o => o.status === 'approved'); }
+function getPending() { return operations.filter(o => o.status === 'pending'); }
+
+// --- CALCULATIONS ---
+function calcPortfolioAt(targetDate) {
+  const target = targetDate instanceof Date ? targetDate : new Date(targetDate);
+  let totalInvested = 0, totalWithdrawn = 0, lots = [];
+  const sorted = [...getApproved()].sort((a, b) => new Date(a.date) - new Date(b.date));
+  for (const op of sorted) {
+    const opDate = new Date(op.date);
+    if (opDate > target) break;
+    if (op.type === 'invest') {
+      lots.push({ amount: op.amount, date: op.date });
+      totalInvested += op.amount;
+    } else if (op.type === 'retrait') {
+      totalWithdrawn += op.amount;
+      let totalVal = 0;
+      for (const lot of lots) totalVal += calcLotValue(lot.amount, lot.date, opDate);
+      if (totalVal > 0) {
+        const ratio = op.amount / totalVal;
+        for (const lot of lots) {
+          const lotVal = calcLotValue(lot.amount, lot.date, opDate);
+          lot.amount = lotVal - lotVal * ratio;
+          lot.date = op.date;
+        }
+      }
+    }
+  }
+  let currentValue = 0;
+  for (const lot of lots) { if (lot.amount > 0) currentValue += calcLotValue(lot.amount, lot.date, target); }
+  return { totalInvested, totalWithdrawn, currentValue };
+}
+
+function calcLotValue(amount, dateStr, targetDate) {
+  const d = new Date(dateStr);
+  const t = targetDate instanceof Date ? targetDate : new Date(targetDate);
+  const days = Math.max(0, (t - d) / (1000*60*60*24));
+  return amount * Math.pow(1 + DAILY_RATE, days);
+}
+
+function fmt(n) { return n.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'; }
+function fmtDate(d) {
+  const m=['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+  return d.getDate()+' '+m[d.getMonth()]+' '+d.getFullYear();
+}
+function durationSince(dateStr) {
+  const days = Math.floor((new Date() - new Date(dateStr))/(1000*60*60*24));
+  if (days<1) return "aujourd'hui"; if (days===1) return "hier"; if (days<30) return 'il y a '+days+' j';
+  const mo=Math.floor(days/30.44); if (mo<12) return 'il y a '+mo+' mois';
+  const y=Math.floor(mo/12), r=mo%12;
+  return r===0 ? 'il y a '+y+' an'+(y>1?'s':'') : 'il y a '+y+'a '+r+'m';
+}
+
+// --- OPERATIONS ---
+function addOperation() {
+  const type = document.getElementById('type').value;
+  const date = document.getElementById('date').value;
+  const amount = parseFloat(document.getElementById('amount').value);
+  if (!date || isNaN(amount) || amount <= 0) { alert('Mets une date et un montant !'); return; }
+  operations.push({ type, date, amount, id: Date.now(), status: 'pending', createdAt: new Date().toISOString() });
+  operations.sort((a,b) => new Date(a.date) - new Date(b.date));
+  saveData();
+  document.getElementById('amount').value = '';
+  alert('👍 C\'est envoyé ! Hugo doit maintenant valider.');
+}
+
+function approveOp(id) {
+  const op = operations.find(o => o.id === id);
+  if (!op) return;
+  if (op.type === 'retrait') {
+    const portfolio = calcPortfolioAt(new Date(op.date));
+    if (op.amount > portfolio.currentValue + 0.01) {
+      alert('Le retrait ('+fmt(op.amount)+') est plus grand que le portefeuille ('+fmt(portfolio.currentValue)+') à cette date.');
+      return;
+    }
+  }
+  op.status = 'approved';
+  op.approvedAt = new Date().toISOString();
+  saveData();
+}
+
+function rejectOp(id) {
+  operations = operations.filter(o => o.id !== id);
+  saveData();
+}
+
+function deleteOp(id) {
+  operations = operations.filter(o => o.id !== id);
+  saveData();
+}
+
+function clearAllConfirmed() {
+  if (confirm('Tu es sûr ? Tout sera effacé pour toujours !')) {
+    operations = [];
+    saveData();
+  }
+}
+
+// --- RENDER ---
+function updateStats() {
+  const { totalInvested, totalWithdrawn, currentValue } = calcPortfolioAt(new Date());
+  const net = totalInvested - totalWithdrawn;
+  const gain = currentValue - net;
+  const pct = net > 0 ? (gain / net) * 100 : 0;
+  document.getElementById('totalInvested').textContent = fmt(totalInvested);
+  document.getElementById('currentValue').textContent = fmt(currentValue);
+  document.getElementById('totalGain').textContent = (gain>=0?'+':'')+fmt(gain);
+  document.getElementById('totalReturn').textContent = pct.toFixed(2)+'%';
+}
+
+function renderPending() {
+  const pending = getPending();
+  const section = document.getElementById('pendingSection');
+  const container = document.getElementById('pendingContainer');
+  document.getElementById('pendingCount').textContent = pending.length;
+  if (pending.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  let html = '<table><thead><tr><th>Type</th><th>Date</th><th>Montant</th><th>Actions</th></tr></thead><tbody>';
+  for (const op of pending) {
+    const dateStr = new Date(op.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const tc = op.type==='invest'?'type-invest':'type-retrait';
+    const tl = op.type==='invest'?'Investissement':'Retrait';
+    const sign = op.type==='invest'?'+':'-';
+    const ac = op.type==='invest'?'plus-value':'retrait-value';
+    html += `<tr><td><span class="type-badge ${tc}">${tl}</span></td><td>${dateStr}</td><td class="${ac}">${sign}${fmt(op.amount)}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-green btn-sm" onclick="askPin('approve',${op.id})">✅ OK</button><button class="btn btn-red btn-sm" onclick="askPin('reject',${op.id})">❌ Non</button></td></tr>`;
+  }
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+function renderTable() {
+  const container = document.getElementById('tableContainer');
+  const approved = getApproved();
+  if (approved.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🫙</div>Aucun investissement pour le moment.<br>Ajoute ton premier investissement ci-dessus !</div>';
+    return;
+  }
+  let html = '<table><thead><tr><th>Type</th><th>Date</th><th>Depuis</th><th>Montant</th><th></th></tr></thead><tbody>';
+  for (const op of approved) {
+    const dateStr = new Date(op.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+    const tc = op.type==='invest'?'type-invest':'type-retrait';
+    const tl = op.type==='invest'?'📥 Invest':'📤 Retrait';
+    const sign = op.type==='invest'?'+':'-';
+    const ac = op.type==='invest'?'plus-value':'retrait-value';
+    html += `<tr><td><span class="type-badge ${tc}">${tl}</span></td><td>${dateStr}</td><td><span class="duration-info">${durationSince(op.date)}</span></td>
+      <td class="${ac}">${sign}${fmt(op.amount)}</td><td><button class="btn-delete" onclick="askPin('delete',${op.id})">🗑</button></td></tr>`;
+  }
+  html += '</tbody></table>';
+  container.innerHTML = html;
+}
+
+let chartInstance = null;
+function renderChart() {
+  const approved = getApproved().filter(o => o.type === 'invest');
+  if (approved.length === 0) { if (chartInstance){chartInstance.destroy();chartInstance=null;} return; }
+  const sorted = [...getApproved()].sort((a,b) => new Date(a.date)-new Date(b.date));
+  const start = new Date(sorted[0].date);
+  const today = new Date();
+  const labels=[], valueData=[], investedData=[];
+  const totalDays = (today-start)/(1000*60*60*24);
+  const step = totalDays>730?14:totalDays>365?7:totalDays>90?3:1;
+  for (let d=new Date(start); d<=today; d.setDate(d.getDate()+step)) {
+    const s = calcPortfolioAt(new Date(d));
+    labels.push(fmtDate(new Date(d)));
+    valueData.push(Math.round(s.currentValue*100)/100);
+    investedData.push(Math.round((s.totalInvested-s.totalWithdrawn)*100)/100);
+  }
+  const f = calcPortfolioAt(today);
+  labels.push(fmtDate(today));
+  valueData.push(Math.round(f.currentValue*100)/100);
+  investedData.push(Math.round((f.totalInvested-f.totalWithdrawn)*100)/100);
+  const ctx = document.getElementById('chart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type:'line',
+    data:{ labels, datasets:[
+      { label:'Ton argent', data:valueData, borderColor:'#00cec9', backgroundColor:'rgba(0,206,201,.1)', fill:true, tension:.3, pointRadius:0, borderWidth:2 },
+      { label:'Ce que tu as mis', data:investedData, borderColor:'#6c5ce7', backgroundColor:'rgba(108,92,231,.05)', fill:true, tension:.3, pointRadius:0, borderWidth:2, borderDash:[5,5] }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},
+        tooltip:{ backgroundColor:'#1a1d2e', borderColor:'#2a2d3e', borderWidth:1, titleColor:'#dfe6e9', bodyColor:'#dfe6e9',
+          callbacks:{ label:c=>c.dataset.label+': '+fmt(c.parsed.y) } }
+      },
+      scales:{
+        x:{ grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',maxTicksLimit:10,maxRotation:45,minRotation:20} },
+        y:{ beginAtZero:true, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'} }
+      }
+    }
+  });
+}
+
+// --- SIMULATEUR ---
+let simChartInstance = null;
+function adjRate(delta) {
+  const el = document.getElementById('simRate');
+  let v = parseFloat(el.value) || 8;
+  v = Math.round((v + delta) * 10) / 10;
+  if (v < 0) v = 0; if (v > 50) v = 50;
+  el.value = v;
+}
+
+function runSim() {
+  const init = parseFloat(document.getElementById('simInit').value) || 0;
+  const monthly = parseFloat(document.getElementById('simMonthly').value) || 0;
+  const years = parseInt(document.getElementById('simYears').value) || 1;
+  const annualRate = (parseFloat(document.getElementById('simRate').value) || 8) / 100;
+  if (init <= 0 && monthly <= 0) { alert('Mets au moins un montant de départ ou un montant mensuel !'); return; }
+  const monthlyRate = Math.pow(1 + annualRate, 1/12) - 1;
+  const totalMonths = years * 12;
+  const labels = [], valueData = [], investedData = [];
+  let balance = init, totalInvested = init;
+  labels.push('Début'); valueData.push(Math.round(balance*100)/100); investedData.push(Math.round(totalInvested*100)/100);
+  for (let m = 1; m <= totalMonths; m++) {
+    balance = balance * (1 + monthlyRate) + monthly;
+    totalInvested += monthly;
+    labels.push(m % 12 === 0 ? 'An ' + (m/12) : 'M' + m);
+    valueData.push(Math.round(balance*100)/100);
+    investedData.push(Math.round(totalInvested*100)/100);
+  }
+  const interest = balance - totalInvested;
+  const returnPct = totalInvested > 0 ? (interest / totalInvested * 100) : 0;
+  document.getElementById('simStats').style.display = '';
+  document.getElementById('simChartCard').style.display = '';
+  document.getElementById('simTotalInvested').textContent = fmt(totalInvested);
+  document.getElementById('simFinalValue').textContent = fmt(balance);
+  document.getElementById('simInterest').textContent = fmt(interest);
+  document.getElementById('simReturn').textContent = returnPct.toFixed(1) + ' %';
+  document.getElementById('simChartTitle').textContent = years;
+  const step = Math.max(1, Math.floor(totalMonths / 60));
+  const fLabels=[], fValue=[], fInvested=[];
+  for (let i=0; i<labels.length; i++) {
+    if (i===0 || i===labels.length-1 || i%step===0) { fLabels.push(labels[i]); fValue.push(valueData[i]); fInvested.push(investedData[i]); }
+  }
+  const ctx = document.getElementById('simChart').getContext('2d');
+  if (simChartInstance) simChartInstance.destroy();
+  simChartInstance = new Chart(ctx, {
+    type:'line',
+    data:{ labels:fLabels, datasets:[
+      { label:'Ton argent', data:fValue, borderColor:'#00cec9', backgroundColor:'rgba(0,206,201,.1)', fill:true, tension:.3, pointRadius:0, borderWidth:2 },
+      { label:'Ce que tu as mis', data:fInvested, borderColor:'#6c5ce7', backgroundColor:'rgba(108,92,231,.05)', fill:true, tension:.3, pointRadius:0, borderWidth:2, borderDash:[5,5] }
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{intersect:false,mode:'index'},
+      plugins:{
+        legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},
+        tooltip:{ backgroundColor:'#1a1d2e', borderColor:'#2a2d3e', borderWidth:1, titleColor:'#dfe6e9', bodyColor:'#dfe6e9',
+          callbacks:{ label:c=>c.dataset.label+': '+fmt(c.parsed.y) } }
+      },
+      scales:{
+        x:{ grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',maxTicksLimit:12,maxRotation:45,minRotation:20} },
+        y:{ beginAtZero:true, grid:{color:'rgba(255,255,255,.05)'}, ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'} }
+      }
+    }
+  });
+}
+
+function render() { updateStats(); renderPending(); renderTable(); renderChart(); }
+</script>
+</body>
+</html>
