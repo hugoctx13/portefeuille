@@ -161,9 +161,19 @@
   .loading-overlay.hidden { display:none; }
   .loading-spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent2); border-radius:50%; animation:spin .8s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  .conn-status { padding:5px 12px; border-radius:20px; font-size:.72rem; font-weight:600; }
-  .conn-status.online { background:rgba(0,184,148,.2); color:var(--green); }
-  .conn-status.offline { background:rgba(255,118,117,.2); color:var(--red); }
+  .toggle-switch { position:relative; display:inline-block; width:46px; height:26px; cursor:pointer; }
+  .toggle-switch input { opacity:0; width:0; height:0; }
+  .toggle-slider { position:absolute; top:0; left:0; right:0; bottom:0; background:var(--border); border-radius:26px; transition:.3s; }
+  .toggle-slider:before { content:''; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:var(--text2); border-radius:50%; transition:.3s; }
+  .toggle-switch input:checked + .toggle-slider { background:var(--green); }
+  .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); background:#fff; }
+  .pw-wrap { position:relative; width:100%; margin-bottom:12px; }
+  .pw-wrap input { width:100%; padding-right:44px; }
+  .pw-eye { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:1.1rem; opacity:.5; transition:opacity .2s; padding:4px 6px; }
+  .pw-eye:hover { opacity:1; }
+  .pw-eye.showing { opacity:1; }
+  .lock-btn { width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition:all .3s; box-shadow:0 2px 8px var(--shadow); }
+  .lock-btn:hover { transform:scale(1.1); border-color:var(--accent); }
   .theme-toggle { width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition:all .3s; box-shadow:0 2px 8px var(--shadow); }
   .theme-toggle:hover { transform:scale(1.1); border-color:var(--accent); }
   .top-bar { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; }
@@ -207,7 +217,7 @@
 <div class="container" id="appContainer" style="display:none;">
   <div class="top-bar">
     <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
-    <div class="conn-status online" id="connStatus">En ligne</div>
+    <button class="lock-btn" onclick="openSettingsModal()" title="Paramètres des codes">🔒</button>
   </div>
   <div class="app-header">
     <div class="logo"><svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -283,7 +293,6 @@
 
     <div class="admin-bar">
       <div><button class="btn-ghost danger" onclick="askPin('clearAll')">🗑 Tout effacer</button></div>
-      <div class="admin-bar-right"><button class="btn-ghost" onclick="askPin('changePin')">🔑 Changer code</button></div>
     </div>
 
     <div class="card">
@@ -301,8 +310,8 @@
       <div class="section-title"><span class="icon">🎮</span> Choisis tes paramètres</div>
       <div class="form-row">
         <div class="form-group"><label>💰 Investissement de départ (€)</label><input type="number" id="simInit" placeholder="Ex: 1000" min="0" step="1" value="1000"></div>
-        <div class="form-group"><label>📅 Chaque mois tu rajoutes (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="100"></div>
-        <div class="form-group"><label>⏰ Pendant combien d'années</label><input type="number" id="simYears" placeholder="Ex: 10" min="1" max="50" step="1" value="10"></div>
+        <div class="form-group"><label>📅 Chaque mois tu rajoutes (€)</label><input type="number" id="simMonthly" placeholder="Ex: 100" min="0" step="1" value="300"></div>
+        <div class="form-group"><label>⏰ Pendant combien d'années</label><input type="number" id="simYears" placeholder="Ex: 10" min="1" max="50" step="1" value="20"></div>
         <div class="form-group">
           <label>📊 Rendement par an (%)</label>
           <div style="display:flex;align-items:center;gap:6px;">
@@ -319,6 +328,10 @@
       <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaudra</div><div class="value accent2" id="simFinalValue">-</div></div>
       <div class="stat-card"><div class="emoji">🎉</div><div class="label">Intérêts gagnés</div><div class="value green" id="simInterest">-</div></div>
       <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement total</div><div class="value gold" id="simReturn">-</div></div>
+    </div>
+    <div class="earnings-row" id="simEarningsRow" style="display:none;">
+      <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label">Tu gagneras par jour</div><div class="value green" id="simEarningsPerDay">+0,00 €</div><div class="earnings-sub" id="simEarningsPerDaySub"></div></div>
+      <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label">Tu gagneras par mois</div><div class="value green" id="simEarningsPerMonth">+0,00 €</div><div class="earnings-sub" id="simEarningsPerMonthSub"></div></div>
     </div>
     <div class="card" id="simChartCard" style="display:none;">
       <div class="section-title"><span class="icon">📈</span> Ton argent dans <span id="simChartTitle">10</span> ans</div>
@@ -385,7 +398,7 @@
     <h3 id="pinTitle">Code secret</h3>
     <p id="pinSubtitle">Tape le code secret de Hugo</p>
     <div class="modal-error" id="pinError"></div>
-    <input type="password" id="pinInput" maxlength="6" placeholder="••••" inputmode="numeric" autocomplete="off">
+    <input type="password" id="pinInput" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off">
     <div class="modal-btns">
       <button class="btn btn-red btn-sm" onclick="closePin()">Annuler</button>
       <button class="btn btn-green btn-sm" onclick="submitPin()">OK</button>
@@ -398,11 +411,11 @@
   <div class="modal">
     <div class="modal-icon">🔑</div>
     <h3>Bienvenue !</h3>
-    <p>Hugo, choisis un code secret (4 à 6 chiffres). Tu en auras besoin pour valider les investissements.</p>
+    <p>Hugo, choisis un code secret (4 chiffres). Tu en auras besoin pour valider les investissements.</p>
     <div class="modal-error" id="setupError"></div>
-    <input type="password" id="setupPin" maxlength="6" placeholder="Ton code" inputmode="numeric" autocomplete="off">
+    <input type="password" id="setupPin" maxlength="4" placeholder="Ton code" inputmode="numeric" autocomplete="off">
     <div style="height:10px;"></div>
-    <input type="password" id="setupPinConfirm" maxlength="6" placeholder="Répète le code" inputmode="numeric" autocomplete="off">
+    <input type="password" id="setupPinConfirm" maxlength="4" placeholder="Répète le code" inputmode="numeric" autocomplete="off">
     <div style="height:16px;"></div>
     <button class="btn btn-primary" onclick="setupPinSubmit()" style="width:100%;">✅ C'est parti !</button>
   </div>
@@ -421,6 +434,40 @@
     <div class="modal-btns">
       <button class="btn btn-red btn-sm" onclick="closeEditAsset()">Annuler</button>
       <button class="btn btn-green btn-sm" onclick="saveEditAsset()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal">
+    <div class="modal-icon">🔒</div>
+    <h3>Paramètres</h3>
+    <!-- Step 1: Enter admin code -->
+    <div id="settingsStep1">
+      <p>Entre le code admin</p>
+      <div class="modal-error" id="settingsError1"></div>
+      <div class="pw-wrap"><input type="password" id="settingsAdminPin" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off"><button type="button" class="pw-eye" onclick="togglePw(this)">👁</button></div>
+      <button class="btn btn-red btn-sm" onclick="closeSettings()" style="width:100%;">Annuler</button>
+    </div>
+    <!-- Step 2: Change codes -->
+    <div id="settingsStep2" style="display:none;">
+      <p>Modifie ce que tu veux, laisse vide pour ne pas changer.</p>
+      <div class="modal-error" id="settingsError2"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <label style="font-size:.88rem;color:var(--text);">🔐 Code de connexion</label>
+        <label class="toggle-switch"><input type="checkbox" id="settingsLockToggle" onchange="toggleLockPreview()"><span class="toggle-slider"></span></label>
+      </div>
+      <div id="settingsLockFields">
+        <div class="pw-wrap"><input type="password" id="settingsNewAccessCode" maxlength="4" placeholder="Nouveau code (4 chiffres)" inputmode="numeric" autocomplete="off"><button type="button" class="pw-eye" onclick="togglePw(this)">👁</button></div>
+      </div>
+      <div style="height:8px;border-top:1px solid var(--border);margin:4px 0 12px;"></div>
+      <label style="font-size:.82rem;color:var(--text2);display:block;margin-bottom:4px;text-align:left;">🔑 Nouveau code admin (4 chiffres)</label>
+      <div class="pw-wrap"><input type="password" id="settingsNewPin" maxlength="4" placeholder="Laisser vide" inputmode="numeric" autocomplete="off"><button type="button" class="pw-eye" onclick="togglePw(this)">👁</button></div>
+      <div class="modal-btns">
+        <button class="btn btn-red btn-sm" onclick="closeSettings()">Annuler</button>
+        <button class="btn btn-green btn-sm" onclick="settingsSave()">💾 Enregistrer</button>
+      </div>
     </div>
   </div>
 </div>
@@ -444,12 +491,12 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 
 // --- LOCK SCREEN ---
-const ACCESS_CODE='0000';
+let accessCode='0000'; // default, will be overridden by Firebase
 document.getElementById('lockInput').addEventListener('input',function(){
   const v=this.value;
   document.getElementById('lockError').textContent='';
   if(v.length===4){
-    if(v===ACCESS_CODE){
+    if(v===accessCode){
       document.getElementById('lockScreen').classList.add('hidden');
       document.getElementById('appContainer').style.display='';
       sessionStorage.setItem('unlocked','1');
@@ -459,12 +506,72 @@ document.getElementById('lockInput').addEventListener('input',function(){
     }
   }
 });
-// Auto-unlock if already unlocked this session
-if(sessionStorage.getItem('unlocked')==='1'){
+// Check lock: skip if already unlocked OR if lock is disabled (cached locally for instant check)
+if(sessionStorage.getItem('unlocked')==='1' || localStorage.getItem('lockEnabled')==='false'){
   document.getElementById('lockScreen').classList.add('hidden');
   document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('appContainer').style.display=''; });
 } else {
   document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('lockInput').focus(); });
+}
+
+// --- PASSWORD TOGGLE ---
+function togglePw(btn){
+  const input=btn.previousElementSibling;
+  if(input.type==='password'){input.type='text';btn.textContent='🙈';btn.classList.add('showing');}
+  else{input.type='password';btn.textContent='👁';btn.classList.remove('showing');}
+}
+
+// --- SETTINGS MODAL ---
+let lockEnabled=true; // default, overridden by Firebase
+function openSettingsModal(){
+  document.getElementById('settingsError1').textContent='';
+  document.getElementById('settingsAdminPin').value='';
+  document.getElementById('settingsStep1').style.display='';
+  document.getElementById('settingsStep2').style.display='none';
+  document.getElementById('settingsModal').classList.add('active');
+  setTimeout(()=>document.getElementById('settingsAdminPin').focus(),100);
+}
+function closeSettings(){
+  document.getElementById('settingsModal').classList.remove('active');
+}
+document.getElementById('settingsAdminPin').addEventListener('input',function(){
+  const v=this.value.trim();
+  const err=document.getElementById('settingsError1');
+  err.textContent='';
+  if(v.length>=4){
+    if(v===getPin()){
+      document.getElementById('settingsStep1').style.display='none';
+      document.getElementById('settingsStep2').style.display='';
+      document.getElementById('settingsError2').textContent='';
+      document.getElementById('settingsNewAccessCode').value='';
+      document.getElementById('settingsNewPin').value='';
+      document.getElementById('settingsLockToggle').checked=lockEnabled;
+      toggleLockPreview();
+    } else {
+      err.textContent='Mauvais code !';
+      this.value=''; this.focus();
+    }
+  }
+});
+function toggleLockPreview(){
+  const on=document.getElementById('settingsLockToggle').checked;
+  document.getElementById('settingsLockFields').style.display=on?'':'none';
+}
+function settingsSave(){
+  const err=document.getElementById('settingsError2');
+  err.textContent='';
+  const newLockEnabled=document.getElementById('settingsLockToggle').checked;
+  const newAccess=document.getElementById('settingsNewAccessCode').value.trim();
+  const newPin=document.getElementById('settingsNewPin').value.trim();
+  if(newAccess&&!/^\d{4}$/.test(newAccess)){err.textContent='Le code connexion doit faire 4 chiffres.';return;}
+  if(newPin&&!/^\d{4}$/.test(newPin)){err.textContent='Le code admin doit faire 4 chiffres.';return;}
+  let changed=false;
+  if(newLockEnabled!==lockEnabled){ lockEnabled=newLockEnabled; db.ref('lockEnabled').set(lockEnabled); changed=true; }
+  if(newAccess){ accessCode=newAccess; db.ref('accessCode').set(newAccess); changed=true; }
+  if(newPin){ setPin(newPin); changed=true; }
+  if(!changed){err.textContent='Rien à changer !';return;}
+  closeSettings();
+  alert('✅ Paramètres mis à jour !');
 }
 
 // ══════════════════════════════════════════════
@@ -481,6 +588,18 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+// Load access code & lock setting from Firebase
+db.ref('accessCode').on('value', s => { const v=s.val(); if(v) accessCode=v; });
+db.ref('lockEnabled').on('value', s => {
+  const v=s.val();
+  lockEnabled=(v===null)?true:v;
+  localStorage.setItem('lockEnabled',String(lockEnabled));
+  if(!lockEnabled){
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('appContainer').style.display='';
+  }
+});
 
 const ANNUAL_RATE = 0.10;
 const DAILY_RATE = Math.pow(1 + ANNUAL_RATE, 1/365) - 1;
@@ -503,11 +622,7 @@ function switchTab(tab) {
 }
 
 // --- CONNECTION ---
-db.ref('.info/connected').on('value', snap => {
-  const el = document.getElementById('connStatus');
-  if (snap.val()===true) { el.textContent='En ligne'; el.className='conn-status online'; }
-  else { el.textContent='Hors ligne'; el.className='conn-status offline'; }
-});
+db.ref('.info/connected').on('value', snap => {});
 
 // --- FIREBASE LISTENERS ---
 db.ref('pin').on('value', s => { cachedPin = s.val(); pinReady=true; tryInit(); });
@@ -526,9 +641,10 @@ db.ref('patrimoineHistory').on('value', s => {
 function tryInit() { if(pinReady && dataReady && assetsReady && histReady && !appInitialized) initApp(); }
 function initApp() {
   document.getElementById('loadingOverlay').classList.add('hidden');
-  document.getElementById('date').value = new Date().toISOString().split('T')[0];
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('date').value=today;
   appInitialized = true;
-  render(); renderPatrimoine(); checkFirstRun();
+  render(); renderPatrimoine(); checkFirstRun(); runSim();
 }
 setTimeout(() => {
   if (!appInitialized) { pinReady=dataReady=assetsReady=histReady=true; initApp(); }
@@ -540,7 +656,7 @@ function setPin(pin) { cachedPin=pin; db.ref('pin').set(pin); }
 function checkFirstRun() { if(!getPin()) document.getElementById('setupModal').classList.add('active'); }
 function setupPinSubmit() {
   const pin=document.getElementById('setupPin').value.trim(), confirm2=document.getElementById('setupPinConfirm').value.trim(), err=document.getElementById('setupError');
-  if(!/^\d{4,6}$/.test(pin)){err.textContent='Le code doit contenir 4 à 6 chiffres.';return;}
+  if(!/^\d{4}$/.test(pin)){err.textContent='Le code doit contenir 4 chiffres.';return;}
   if(pin!==confirm2){err.textContent='Les deux codes ne sont pas identiques !';return;}
   setPin(pin); document.getElementById('setupModal').classList.remove('active');
 }
@@ -569,6 +685,7 @@ document.addEventListener('keydown',e=>{
     if(document.getElementById('pinModal').classList.contains('active'))submitPin();
     if(document.getElementById('setupModal').classList.contains('active'))setupPinSubmit();
     if(document.getElementById('editAssetModal').classList.contains('active'))saveEditAsset();
+    if(document.getElementById('settingsModal').classList.contains('active')&&document.getElementById('settingsStep2').style.display!=='none')settingsSave();
   }
 });
 
@@ -762,8 +879,8 @@ function renderChart(){
   const ctx=document.getElementById('chart').getContext('2d');
   if(chartInstance)chartInstance.destroy();
   chartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[
-    {label:'Ton argent',data:valueData,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
-    {label:'Ce que tu as mis',data:investedData,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
+    {label:'Valeur actuelle',data:valueData,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
+    {label:'Ce que j\'ai investi',data:investedData,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
   ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
     plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
     scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:10,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
@@ -874,17 +991,34 @@ function runSim(){
   labels.push('Début');valueData.push(Math.round(balance*100)/100);investedData.push(Math.round(totalInvested*100)/100);
   for(let m=1;m<=totalMonths;m++){balance=balance*(1+monthlyRate)+monthly;totalInvested+=monthly;labels.push(m%12===0?'An '+(m/12):'M'+m);valueData.push(Math.round(balance*100)/100);investedData.push(Math.round(totalInvested*100)/100);}
   const interest=balance-totalInvested,returnPct=totalInvested>0?(interest/totalInvested*100):0;
-  document.getElementById('simStats').style.display='';document.getElementById('simChartCard').style.display='';
+  document.getElementById('simStats').style.display='';document.getElementById('simChartCard').style.display='';document.getElementById('simEarningsRow').style.display='';
   document.getElementById('simTotalInvested').textContent=fmt(totalInvested);document.getElementById('simFinalValue').textContent=fmt(balance);
   document.getElementById('simInterest').textContent=fmt(interest);document.getElementById('simReturn').textContent=returnPct.toFixed(1)+' %';
   document.getElementById('simChartTitle').textContent=years;
+  // Earnings per day/month from simulated final balance
+  const simDailyRate=Math.pow(1+annualRate,1/365)-1;
+  const simDailyGain=balance*simDailyRate;
+  const simMonthlyGain=balance*(Math.pow(1+simDailyRate,30)-1);
+  document.getElementById('simEarningsPerDay').textContent='+'+fmt(simDailyGain);
+  document.getElementById('simEarningsPerMonth').textContent='+'+fmt(simMonthlyGain);
+  const sdSub=document.getElementById('simEarningsPerDaySub'),smSub=document.getElementById('simEarningsPerMonthSub');
+  if(simDailyGain>=10)sdSub.textContent='🤑 Machine à billets !';
+  else if(simDailyGain>=1)sdSub.textContent='💪 Même en dormant !';
+  else if(simDailyGain>0)sdSub.textContent='🌱 Ça pousse doucement...';
+  else sdSub.textContent='';
+  if(simMonthlyGain>=500)smSub.textContent='🏆 Un vrai salaire passif !';
+  else if(simMonthlyGain>=50)smSub.textContent='🔥 Pas mal du tout !';
+  else if(simMonthlyGain>=10)smSub.textContent='📈 Ça monte bien !';
+  else if(simMonthlyGain>0)smSub.textContent='🌱 Continue comme ça !';
+  else smSub.textContent='';
+  document.querySelectorAll('#simEarningsRow .earnings-card').forEach(c=>{c.classList.remove('active');if(balance>0)setTimeout(()=>c.classList.add('active'),100);});
   const step2=Math.max(1,Math.floor(totalMonths/60));const fL=[],fV=[],fI=[];
   for(let i=0;i<labels.length;i++){if(i===0||i===labels.length-1||i%step2===0){fL.push(labels[i]);fV.push(valueData[i]);fI.push(investedData[i]);}}
   const ctx=document.getElementById('simChart').getContext('2d');
   if(simChartInstance)simChartInstance.destroy();
   simChartInstance=new Chart(ctx,{type:'line',data:{labels:fL,datasets:[
-    {label:'Ton argent',data:fV,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
-    {label:'Ce que tu as mis',data:fI,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
+    {label:'Valeur actuelle',data:fV,borderColor:'#00cec9',backgroundColor:'rgba(0,206,201,.1)',fill:true,tension:.3,pointRadius:0,borderWidth:2},
+    {label:'Ce que j\'ai investi',data:fI,borderColor:'#6c5ce7',backgroundColor:'rgba(108,92,231,.05)',fill:true,tension:.3,pointRadius:0,borderWidth:2,borderDash:[5,5]}
   ]},options:{responsive:true,maintainAspectRatio:false,interaction:{intersect:false,mode:'index'},
     plugins:{legend:{labels:{color:'#a0a4b8',usePointStyle:true,padding:20}},tooltip:{backgroundColor:'#1a1d2e',borderColor:'#2a2d3e',borderWidth:1,titleColor:'#dfe6e9',bodyColor:'#dfe6e9',callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
     scales:{x:{grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',maxTicksLimit:12,maxRotation:45,minRotation:20}},y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.05)'},ticks:{color:'#a0a4b8',callback:v=>v.toLocaleString('fr-FR')+' €'}}}}});
