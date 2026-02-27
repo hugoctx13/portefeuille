@@ -26,11 +26,21 @@
   body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:0; }
   .container { max-width:960px; margin:0 auto; padding:16px; }
   .app-header { text-align:center; margin-bottom:20px; }
-  .app-header .logo { font-size:2.6rem; margin-bottom:2px; }
+  .app-header .logo { font-size:2.6rem; margin-bottom:2px; display:flex; justify-content:center; }
   .app-header h1 { font-size:1.6rem; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; margin-bottom:4px; }
   .app-header .tagline { color:var(--text2); font-size:.88rem; }
   .section-title { display:flex; align-items:center; gap:10px; font-size:1.15rem; font-weight:700; margin-bottom:14px; }
   .section-title .icon { font-size:1.4rem; }
+
+  /* LOCK SCREEN */
+  .lock-screen { position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:300; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+  .lock-screen.hidden { display:none; }
+  .lock-screen .lock-icon { font-size:4rem; margin-bottom:8px; }
+  .lock-screen h2 { font-size:1.4rem; color:var(--text); margin-bottom:4px; }
+  .lock-screen p { color:var(--text2); font-size:.9rem; margin-bottom:16px; }
+  .lock-screen input { background:var(--card); border:2px solid var(--border); color:var(--text); padding:16px 20px; border-radius:14px; font-size:1.4rem; width:200px; text-align:center; outline:none; letter-spacing:8px; }
+  .lock-screen input:focus { border-color:var(--accent); }
+  .lock-error { color:var(--red); font-size:.85rem; min-height:22px; }
 
   /* TABS */
   .tabs { display:flex; background:var(--card); border-radius:14px; padding:4px; margin-bottom:24px; border:1px solid var(--border); position:sticky; top:0; z-index:30; }
@@ -54,6 +64,12 @@
   .stat-card.big { grid-column:1/-1; padding:20px; }
   .stat-card.big .emoji { font-size:2rem; }
   .stat-card.big .value { font-size:1.8rem; }
+  .earnings-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; margin-bottom:24px; }
+  .earnings-card { background:linear-gradient(135deg, var(--card) 0%, rgba(0,184,148,.08) 100%); border-color:rgba(0,184,148,.25); position:relative; overflow:hidden; }
+  .earnings-card .value { font-size:1.35rem; }
+  .earnings-sub { font-size:.7rem; color:var(--text2); margin-top:4px; font-style:italic; }
+  @keyframes pulse-green { 0%,100%{box-shadow:0 0 0 0 rgba(0,184,148,.15);} 50%{box-shadow:0 0 12px 4px rgba(0,184,148,.2);} }
+  .earnings-card.active { animation:pulse-green 2s ease-in-out infinite; }
 
   /* Cards */
   .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:20px; }
@@ -145,11 +161,12 @@
   .loading-overlay.hidden { display:none; }
   .loading-spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--accent2); border-radius:50%; animation:spin .8s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  .conn-status { position:fixed; top:10px; right:10px; padding:5px 12px; border-radius:20px; font-size:.72rem; font-weight:600; z-index:50; }
+  .conn-status { padding:5px 12px; border-radius:20px; font-size:.72rem; font-weight:600; }
   .conn-status.online { background:rgba(0,184,148,.2); color:var(--green); }
   .conn-status.offline { background:rgba(255,118,117,.2); color:var(--red); }
-  .theme-toggle { position:fixed; top:10px; left:10px; width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; z-index:50; transition:all .3s; box-shadow:0 2px 8px var(--shadow); }
+  .theme-toggle { width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; transition:all .3s; box-shadow:0 2px 8px var(--shadow); }
   .theme-toggle:hover { transform:scale(1.1); border-color:var(--accent); }
+  .top-bar { display:flex; justify-content:space-between; align-items:center; padding:10px 16px; }
   [data-theme="light"] .stat-card { box-shadow:0 2px 8px var(--shadow); }
   [data-theme="light"] .card { box-shadow:0 2px 8px var(--shadow); }
   [data-theme="light"] .tabs { box-shadow:0 2px 8px var(--shadow); }
@@ -160,6 +177,7 @@
   [data-theme="light"] .btn-ghost { background:#e8eaef; color:var(--text2); }
   [data-theme="light"] .btn-ghost:hover { background:#d8dae0; }
   [data-theme="light"] .loading-overlay { background:var(--bg); }
+  [data-theme="light"] .lock-screen { background:var(--bg); }
 
   @media(max-width:500px){
     .form-row { flex-direction:column; }
@@ -172,17 +190,49 @@
 </head>
 <body>
 
+<!-- LOCK SCREEN -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-icon">🔐</div>
+  <h2>Mon Portefeuille</h2>
+  <p>Tape le code d'accès</p>
+  <div class="lock-error" id="lockError"></div>
+  <input type="password" id="lockInput" maxlength="4" placeholder="••••" inputmode="numeric" autocomplete="off">
+</div>
+
 <div class="loading-overlay" id="loadingOverlay">
   <div style="font-size:3rem;">📈</div>
   <div class="loading-spinner"></div>
   <div style="color:var(--text2);font-size:.95rem;">Connexion en cours...</div>
 </div>
-<div class="conn-status online" id="connStatus">En ligne</div>
-<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
-
-<div class="container">
+<div class="container" id="appContainer" style="display:none;">
+  <div class="top-bar">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
+    <div class="conn-status online" id="connStatus">En ligne</div>
+  </div>
   <div class="app-header">
-    <div class="logo">📈</div>
+    <div class="logo"><svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="32" cy="36" rx="22" ry="18" fill="#F8A5B8"/>
+      <ellipse cx="32" cy="36" rx="22" ry="18" fill="url(#pgGrad)" opacity=".5"/>
+      <ellipse cx="32" cy="36" rx="19" ry="15" fill="#FFB6C8"/>
+      <ellipse cx="15" cy="33" rx="5" ry="6" fill="#F8A5B8"/>
+      <ellipse cx="49" cy="33" rx="5" ry="6" fill="#F8A5B8"/>
+      <ellipse cx="15" cy="33" rx="3.5" ry="4.5" fill="#FFB6C8"/>
+      <ellipse cx="49" cy="33" rx="3.5" ry="4.5" fill="#FFB6C8"/>
+      <circle cx="24" cy="29" r="2.5" fill="#2d3436"/>
+      <circle cx="40" cy="29" r="2.5" fill="#2d3436"/>
+      <circle cx="25" cy="28.2" r="1" fill="#fff"/>
+      <circle cx="41" cy="28.2" r="1" fill="#fff"/>
+      <ellipse cx="32" cy="38" rx="6" ry="4.5" fill="#E8889E"/>
+      <circle cx="30" cy="37.5" r="1.2" fill="#D4758A"/>
+      <circle cx="34" cy="37.5" r="1.2" fill="#D4758A"/>
+      <path d="M20 48 L18 56 L22 56 L23 49" stroke="#E8889E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M44 48 L46 56 L42 56 L41 49" stroke="#E8889E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      <path d="M52 34 Q56 32 55 38 Q54 42 51 40" stroke="#F8A5B8" stroke-width="2" fill="#F8A5B8"/>
+      <rect x="27" y="17" rx="3" width="10" height="6" fill="#fdcb6e"/>
+      <rect x="30.5" y="14" width="3" height="5" rx="1.5" fill="#f39c12"/>
+      <circle cx="32" cy="19.5" r="1.5" fill="#f39c12"/>
+      <defs><radialGradient id="pgGrad" cx="35%" cy="30%"><stop offset="0%" stop-color="#fff" stop-opacity=".3"/><stop offset="100%" stop-color="#F8A5B8" stop-opacity="0"/></radialGradient></defs>
+    </svg></div>
     <h1>Mon Portefeuille</h1>
     <div class="tagline">Regarde ton argent grandir !</div>
   </div>
@@ -193,9 +243,7 @@
     <div class="tab" onclick="switchTab('patrimoine')">🏠 Patrimoine</div>
   </div>
 
-  <!-- ═══════════════════════════════════ -->
-  <!--         TAB INVESTISSEMENTS        -->
-  <!-- ═══════════════════════════════════ -->
+  <!-- TAB INVESTISSEMENTS -->
   <div class="tab-content active" id="tab-invest">
 
     <div class="section-title"><span class="icon">💰</span> Comment va ton portefeuille</div>
@@ -204,6 +252,10 @@
       <div class="stat-card"><div class="emoji">💎</div><div class="label">Ca vaut maintenant</div><div class="value accent2" id="currentValue">0,00 €</div></div>
       <div class="stat-card"><div class="emoji">🎉</div><div class="label">Tu as gagné</div><div class="value green" id="totalGain">+0,00 €</div></div>
       <div class="stat-card"><div class="emoji">📊</div><div class="label">Rendement</div><div class="value gold" id="totalReturn">0,00%</div></div>
+    </div>
+    <div class="earnings-row">
+      <div class="stat-card earnings-card"><div class="emoji">⚡</div><div class="label">Tu gagnes par jour</div><div class="value green" id="earningsPerDay">+0,00 €</div><div class="earnings-sub" id="earningsPerDaySub"></div></div>
+      <div class="stat-card earnings-card"><div class="emoji">🚀</div><div class="label">Tu gagnes par mois</div><div class="value green" id="earningsPerMonth">+0,00 €</div><div class="earnings-sub" id="earningsPerMonthSub"></div></div>
     </div>
 
     <div class="card pending" id="pendingSection" style="display:none;">
@@ -255,7 +307,7 @@
           <label>📊 Rendement par an (%)</label>
           <div style="display:flex;align-items:center;gap:6px;">
             <button class="btn-pm" onclick="adjRate(-1)">−</button>
-            <input type="number" id="simRate" min="0" max="50" step="0.5" value="8" style="text-align:center;flex:1;">
+            <input type="number" id="simRate" min="0" max="50" step="0.5" value="10" style="text-align:center;flex:1;">
             <button class="btn-pm" onclick="adjRate(1)">+</button>
           </div>
         </div>
@@ -274,9 +326,7 @@
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════ -->
-  <!--          TAB PATRIMOINE            -->
-  <!-- ═══════════════════════════════════ -->
+  <!-- TAB PATRIMOINE -->
   <div class="tab-content" id="tab-patrimoine">
 
     <div class="stats">
@@ -325,7 +375,7 @@
     </div>
   </div>
 
-  <div class="footer">Ton argent grossit de 8% par an grâce aux intérêts composés 🧠</div>
+  <div class="footer">Ton argent grossit de 10% par an grâce aux intérêts composés 🧠</div>
 </div>
 
 <!-- PIN Modal -->
@@ -387,10 +437,35 @@ function toggleTheme(){
 (function(){
   const saved=localStorage.getItem('theme')||'dark';
   document.documentElement.setAttribute('data-theme',saved);
-  document.addEventListener('DOMContentLoaded',()=>{
-    document.getElementById('themeToggle').textContent=saved==='dark'?'🌙':'☀️';
-  });
 })();
+document.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('theme')||'dark';
+  document.getElementById('themeToggle').textContent=saved==='dark'?'🌙':'☀️';
+});
+
+// --- LOCK SCREEN ---
+const ACCESS_CODE='0000';
+document.getElementById('lockInput').addEventListener('input',function(){
+  const v=this.value;
+  document.getElementById('lockError').textContent='';
+  if(v.length===4){
+    if(v===ACCESS_CODE){
+      document.getElementById('lockScreen').classList.add('hidden');
+      document.getElementById('appContainer').style.display='';
+      sessionStorage.setItem('unlocked','1');
+    } else {
+      document.getElementById('lockError').textContent='Mauvais code !';
+      this.value=''; this.focus();
+    }
+  }
+});
+// Auto-unlock if already unlocked this session
+if(sessionStorage.getItem('unlocked')==='1'){
+  document.getElementById('lockScreen').classList.add('hidden');
+  document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('appContainer').style.display=''; });
+} else {
+  document.addEventListener('DOMContentLoaded',()=>{ document.getElementById('lockInput').focus(); });
+}
 
 // ══════════════════════════════════════════════
 const firebaseConfig = {
@@ -407,7 +482,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const ANNUAL_RATE = 0.08;
+const ANNUAL_RATE = 0.10;
 const DAILY_RATE = Math.pow(1 + ANNUAL_RATE, 1/365) - 1;
 
 let operations = [];
@@ -464,9 +539,9 @@ function getPin() { return cachedPin; }
 function setPin(pin) { cachedPin=pin; db.ref('pin').set(pin); }
 function checkFirstRun() { if(!getPin()) document.getElementById('setupModal').classList.add('active'); }
 function setupPinSubmit() {
-  const pin=document.getElementById('setupPin').value.trim(), confirm=document.getElementById('setupPinConfirm').value.trim(), err=document.getElementById('setupError');
+  const pin=document.getElementById('setupPin').value.trim(), confirm2=document.getElementById('setupPinConfirm').value.trim(), err=document.getElementById('setupError');
   if(!/^\d{4,6}$/.test(pin)){err.textContent='Le code doit contenir 4 à 6 chiffres.';return;}
-  if(pin!==confirm){err.textContent='Les deux codes ne sont pas identiques !';return;}
+  if(pin!==confirm2){err.textContent='Les deux codes ne sont pas identiques !';return;}
   setPin(pin); document.getElementById('setupModal').classList.remove('active');
 }
 function askPin(action, data) {
@@ -585,11 +660,9 @@ function saveEditAsset(){
   if(isNaN(v)||v<0){alert('Mets une valeur valide !');return;}
   const a=assets.find(x=>x.id===editingAssetId); if(!a)return;
   if(!a.valueHistory) a.valueHistory=[];
-  // Remove existing entry on same date, then add new
   a.valueHistory=a.valueHistory.filter(h=>h.date!==d);
   a.valueHistory.push({date:d, value:v, id:Date.now()});
   a.valueHistory.sort((x,y)=>x.date.localeCompare(y.date));
-  // Current value = latest entry
   const latest=a.valueHistory[a.valueHistory.length-1];
   a.value=latest.value; a.updatedAt=new Date().toISOString();
   saveAssets(); savePatrimoineSnapshot(); closeEditAsset();
@@ -623,6 +696,27 @@ function updateStats(){
   document.getElementById('currentValue').textContent=fmt(currentValue);
   document.getElementById('totalGain').textContent=(gain>=0?'+':'')+fmt(gain);
   document.getElementById('totalReturn').textContent=pct.toFixed(2)+'%';
+  // Gains par jour et par mois
+  const dailyGain=currentValue*DAILY_RATE;
+  const monthlyGain=currentValue*(Math.pow(1+DAILY_RATE,30)-1);
+  const perDayEl=document.getElementById('earningsPerDay');
+  const perMonthEl=document.getElementById('earningsPerMonth');
+  perDayEl.textContent='+'+fmt(dailyGain);
+  perMonthEl.textContent='+'+fmt(monthlyGain);
+  // Petite phrase fun en dessous
+  const daySubEl=document.getElementById('earningsPerDaySub');
+  const monthSubEl=document.getElementById('earningsPerMonthSub');
+  if(dailyGain>=1) daySubEl.textContent='💪 Même en dormant !';
+  else if(dailyGain>0) daySubEl.textContent='🌱 Ça pousse doucement...';
+  else daySubEl.textContent='';
+  if(monthlyGain>=50) monthSubEl.textContent='🔥 Pas mal du tout !';
+  else if(monthlyGain>=10) monthSubEl.textContent='📈 Ça monte bien !';
+  else if(monthlyGain>0) monthSubEl.textContent='🌱 Continue comme ça !';
+  else monthSubEl.textContent='';
+  // Animation si gains > 0
+  document.querySelectorAll('.earnings-card').forEach(c=>{
+    if(currentValue>0) c.classList.add('active'); else c.classList.remove('active');
+  });
 }
 function renderPending(){
   const pending=getPending(),section=document.getElementById('pendingSection'),container=document.getElementById('pendingContainer');
@@ -727,7 +821,6 @@ function toggleHistory(assetId){
 }
 let patrimoineChartInst=null;
 function renderPatrimoineChart(){
-  // Collect all relevant dates from asset histories + operations
   const dateSet=new Set();
   for(const a of assets){
     if(a.valueHistory) for(const h of a.valueHistory) dateSet.add(h.date);
@@ -735,11 +828,9 @@ function renderPatrimoineChart(){
   for(const op of getApproved()) dateSet.add(op.date);
   const today=new Date().toISOString().split('T')[0];
   dateSet.add(today);
-
-  if(dateSet.size<1){if(patrimoineChartInst){patrimoineChartInst.destroy();patrimoineChartInst=null;}return;}
+  if(dateSet.size<2 && assets.length===0 && getApproved().length===0){if(patrimoineChartInst){patrimoineChartInst.destroy();patrimoineChartInst=null;}return;}
 
   const dates=[...dateSet].sort();
-  // Fill gaps: add weekly points between first and last date
   const first=new Date(dates[0]+'T00:00:00'), last=new Date(dates[dates.length-1]+'T00:00:00');
   const totalDays=(last-first)/(1000*60*60*24);
   const step=totalDays>730?14:totalDays>365?7:totalDays>90?3:1;
@@ -787,8 +878,8 @@ function runSim(){
   document.getElementById('simTotalInvested').textContent=fmt(totalInvested);document.getElementById('simFinalValue').textContent=fmt(balance);
   document.getElementById('simInterest').textContent=fmt(interest);document.getElementById('simReturn').textContent=returnPct.toFixed(1)+' %';
   document.getElementById('simChartTitle').textContent=years;
-  const step=Math.max(1,Math.floor(totalMonths/60));const fL=[],fV=[],fI=[];
-  for(let i=0;i<labels.length;i++){if(i===0||i===labels.length-1||i%step===0){fL.push(labels[i]);fV.push(valueData[i]);fI.push(investedData[i]);}}
+  const step2=Math.max(1,Math.floor(totalMonths/60));const fL=[],fV=[],fI=[];
+  for(let i=0;i<labels.length;i++){if(i===0||i===labels.length-1||i%step2===0){fL.push(labels[i]);fV.push(valueData[i]);fI.push(investedData[i]);}}
   const ctx=document.getElementById('simChart').getContext('2d');
   if(simChartInstance)simChartInstance.destroy();
   simChartInstance=new Chart(ctx,{type:'line',data:{labels:fL,datasets:[
